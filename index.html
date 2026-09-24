@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+  /* Thème mémorisé appliqué avant le premier rendu (même clé que le Cartographe). */
+  try {
+    var _t = localStorage.getItem('gta-carto-theme-v33');
+    document.documentElement.setAttribute('data-theme', _t === 'dark' ? 'dark' : 'light');
+  } catch (_) { document.documentElement.setAttribute('data-theme', 'light'); }
+</script>
+<title>Atelier GTA #Dièse — v2.0</title>
+<meta name="description" content="Cartographie, audit, catalogue et dossier de paramétrage GTA #Dièse, dans le navigateur.">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAMFBMVEW8FiEAAADFHyrQXGS1CSPim5/67u/9AAC7FyK6FyJ/AADHOkPZfIPsvcH/AGPDGCTDdLDGAAAAEHRSTlP9AP7+D/7+AqBfAv///wJwpYcBKwAABFFJREFUeNp1lV1oFFcUx39zZ3ezq8V4d9euVZJONilNUraOmUbT9sVtHyzYBxtbLII1kCKtUEko7Zs1kUIjVGgNFBEK8aPQx6CEBvppwVZD1h1aiGJJXIsxW8xmRhsVrbvTh7ubTdbNPF2G35z/Ofc/5xxNAsDgqTGqPposnazdPdUAPQSAPRFNjW76aHRZ4MJLX/fPp34yt9rLSOhzGFOHR+2A2TpULULAu+s5YjLdfzs1selGNQl/1MVzxOTlgdlxvX36MUAInwt4Tv35KwM/Tg/mpitz2JDJFF/EC9nPD2AlhpYApvZTOWi88P73KboTPYsk1r7xXRlw7kzmevNnijUr4DXt50V5ec6dybH+2+kJc6sNUkoZi4rK+xFxDidldKtUEfwRtwJQNedSKkndF8xU8SnOzdlGJcFI2w7/L2/5t5/XO9sbd4y07fCbnUC8JaqHgCPuDxtWatNPaMYf4ul1Ul6sjWhmMA2Ou0oPAdnOc7PBc4Vsuu7qpbqrNyOpezXnHv0zA6LwrkrfBWqATA1w/z6fUKPS6LP1EHBrpMlcmU/UCTMmjHUyLO1I3lybBm17UAABOJjOpW0nnXNSTvrS3J5rOSfnAvXDaBJ0f42eX38hYQMY+jXzUqnQZuehHgIhfGu+vSYU8HqsJe46RWDNvCeA3c18tudjR13m5Zmp/VOlCP8BUsrkK+hGmz4MgNGIuWCILyYFwBYs6wVLAZZ1vt0oEQdaEUBXH/R4rpLI9OwvLLixGlBm67Tp6jtDL0uQ7JV6CN0Xcds7mkS7DfDqcyusuaL5Ru8AAvIegNdXlKBQUwoQ/FBJ9BjLSLREpdRDHBm1ae9oFM9cATj7b1nCXfUIAUOd5ZThi0X/ZX4nIOX1Q1SXEP1JKX1gzYFVF/70eAYgsmnyRTdTjinQqQfQ+pSEgXhQjFA/bAIy+pShJIYrJZpjUkofugdY/tZ51a6RJ/NmccxoeUCwqxlgrbZaSbQYR4VRNhtk8iigG226WWG38MWklEL90mfCDXH13frw2cay2SAw+4D+ExGpJNY1nAwbi25Or7XvAsFv3LSXBbiX/c27rPr3gWmDyPsNQISN4gQIhxsaimbvHQIEHoDcGNmocms80VaUCH4AIPS3AZxULq2qn9wzcU/dtKZq2WUvHQ193C+e/goACLsTQFoliVMnrBVG2WwEroHqza6ixDtzmWJnA9C7hbhRbVGIL5NSSomU0WNVESPZq4DTvTJ6TDyONMeklFJqklBrCuvNfcbUUqDlVn5hVodaU3RsPrQUaXLzC7P60cxe/eLFLdt+bXDKOd72L9163X+OhTZsPkkpijjYZS7aOJCe/ur6+Pjz2/6uVV2jbR/ILgFgJNudHx8/cDpe6wLeg67RpYsVIJBIDAX634sXMhg7j/M4oJDB+X1GITibrwpAKDFGd9O+Z+ceLgNAIJGi4+XB5QHonvi9YrFWPOkbgzNZdfwfRLlwaC7A1R0AAAAASUVORK5CYII=">
+<script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/styles/vis-network.min.css">
+<link rel="stylesheet" href="app/explorer/explorer.css">
+<link rel="stylesheet" href="app/atelier.css">
+</head>
+<body>
+<div id="app" data-view="accueil">
+  <header>
+    <span class="brand" id="brand" title="it4culture"></span>
+    <h1>Atelier GTA <span class="v" id="version-label">#Dièse · v2.0</span></h1>
+    <nav class="tabs" role="tablist" aria-label="Outils">
+      <button role="tab" data-view="accueil" aria-selected="true">Accueil</button>
+      <button role="tab" data-view="explorer" disabled>Explorer</button>
+      <button role="tab" data-view="catalogue" disabled>Catalogue</button>
+      <button role="tab" data-view="audit" disabled>Audit <span class="tab-badge" id="audit-badge" hidden></span></button>
+      <button role="tab" data-view="dossier" disabled>Dossier client</button>
+    </nav>
+    <span class="stats explorer-only" id="stats"></span>
+    <div id="indicator-anom" class="hdr-indicator explorer-only" title="Cliquez pour détailler les appels vers des règles inexistantes">
+      <span class="ind-icon">✓</span><span class="ind-text">Aucun appel caduc</span>
+    </div>
+    <div id="indicator-anom-panel" class="hdr-popover" hidden>
+      <h3>Appels caducs <span class="hint" id="anom-pop-stats"></span></h3>
+      <div id="indicator-anom-list"></div>
+    </div>
+    <div id="indicator-opti" class="hdr-indicator explorer-only" title="Pistes d'optimisation détectées dans les formules">
+      <span class="ind-icon">✓</span><span class="ind-text">Aucune piste d'optimisation</span>
+    </div>
+    <div id="indicator-opti-panel" class="hdr-popover hdr-popover-wide" hidden>
+      <h3>Optimisations possibles <span class="hint" id="opti-pop-stats"></span></h3>
+      <div id="indicator-opti-list"></div>
+    </div>
+    <div class="actions">
+      <button id="btn-add-files" class="primary" title="Déposer les exports #Dièse : règles, types de jour, référentiels">Déposer des exports…</button>
+      <input type="file" id="files-input" accept=".xlsx,.csv,.tsv" multiple hidden>
+      <button id="btn-theme" title="Passer en thème sombre" aria-label="Passer en thème sombre">&#9790;</button>
+    </div>
+  </header>
+
+  <aside class="left">
+    <section>
+      <h2>Recherche</h2>
+      <input id="search" type="text" placeholder="Nom, code, ID, libellé…">
+      <div id="search-results"></div>
+    </section>
+    <section>
+      <h2>Filtre par affectation</h2>
+      <select id="filter-affect"><option value="">— Toutes les affectations —</option></select>
+    </section>
+    <section>
+      <details class="fold">
+        <summary>Types de règle <span class="badge" id="legend-count">0</span></summary>
+        <div class="fold-body"><div id="legend"></div></div>
+      </details>
+    </section>
+    <section>
+      <details class="fold">
+        <summary>Types de jour <span class="badge" id="dt-count">0</span></summary>
+        <div class="fold-body">
+          <div id="dt-status" class="dt-status">Aucun référentiel chargé</div>
+          <label class="toggle"><input type="checkbox" id="toggle-dt-layer"> Afficher dans le graphe</label>
+          <p class="smallnote">Cliquez sur un type de jour pour mettre en évidence les règles qui l'utilisent.</p>
+          <div id="dt-grid" class="dt-grid" style="margin-top:6px"></div>
+        </div>
+      </details>
+    </section>
+    <section>
+      <h2>Analyse</h2>
+      <div class="analysis-actions">
+        <button id="btn-audit-side" class="btn-wide">Audit du graphe</button>
+        <button id="btn-counters" class="btn-wide">Vue par compteur</button>
+        <button id="btn-contracts" class="btn-wide">Vue par type de contrat</button>
+        <button id="btn-isolates" class="btn-wide">Lister les règles isolées</button>
+        <button id="btn-variables" class="btn-wide">Index des variables</button>
+      </div>
+      <p class="smallnote">L'audit sépare ce qui cloche vraiment (références cassées, cycles, règles jamais affectées) de ce qui n'est qu'une mesure de complexité. Les deux vues se lisent comme une séquence de calcul et s'impriment directement.</p>
+    </section>
+    <section>
+      <h2>Mise en évidence</h2>
+      <label class="toggle"><input type="checkbox" id="toggle-ancestors" checked> Antécédents (amont)</label>
+      <label class="toggle"><input type="checkbox" id="toggle-descendants" checked> Descendants (aval)</label>
+      <p class="smallnote">Cliquez sur une règle pour afficher ses dépendances. Double‑clic pour effacer la sélection.</p>
+    </section>
+  </aside>
+
+  <div id="network">
+    <div id="graph-canvas" style="position:absolute;inset:0"></div>
+    <div class="graph-toolbar">
+      <button id="btn-audit" class="ghost" title="Audit du graphe : références cassées, cycles, règles jamais affectées, complexité">Audit du graphe</button>
+      <button id="btn-relayout" title="Recalcule la disposition une fois (puis fige)">Réorganiser</button>
+      <button id="btn-fit" title="Recadrer la vue">Recadrer</button>
+      <button id="btn-reset" title="Effacer la sélection et les filtres" class="ghost">Reset</button>
+    </div>
+    <div id="drop-overlay">Déposez un Excel (règles ou types de jour)</div>
+    <div id="load-error">
+      <div>⚠️ Échec du chargement de vis-network</div>
+      <div style="color:var(--muted);font-size:12px">Vérifiez votre connexion (les bibliothèques sont chargées depuis un CDN).</div>
+    </div>
+    <div id="toasts"></div>
+
+    <!-- Affiché tant qu'aucun environnement n'est chargé -->
+    <div id="welcome-overlay" hidden>
+      <div class="welcome-card">
+        <div class="welcome-brand" id="welcome-brand"></div>
+        <h2>Aucun environnement chargé</h2>
+        <p>Déposez les exports #Dièse du client depuis l'onglet <strong>Accueil</strong> : le graphe des règles apparaîtra ici.</p>
+        <button id="welcome-load" class="welcome-btn">Déposer des exports…</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="right">
+    <div id="detail"><div class="placeholder">Cliquez sur une règle pour voir ses détails</div></div>
+  </aside>
+
+  <!-- Fenêtre d'analyse : audit, règles isolées, chaîne de calcul -->
+  <div id="an-modal" class="an-modal" hidden>
+    <div class="an-dialog">
+      <div class="an-head">
+        <div><h2 id="an-title">Analyse</h2><div id="an-subtitle" class="an-sub"></div></div>
+        <div class="an-print-brand" id="an-print-brand"></div>
+        <button id="an-close" class="ghost">Fermer</button>
+      </div>
+      <div id="an-body" class="an-body"></div>
+    </div>
+  </div>
+
+  <!-- Vues de l'Atelier, posées au-dessus de l'Explorer (qui garde ainsi sa taille réelle) -->
+  <main id="views">
+    <section id="view-accueil" class="view" data-view="accueil">
+      <div class="view-inner narrow">
+        <div class="hero">
+          <h2>Un environnement, tous les outils GTA</h2>
+          <p>Déposez les exports #Dièse du client. L'Atelier les lit une seule fois et en tire le graphe des règles, l'audit, le catalogue en langage clair et le dossier de paramétrage à remettre au client.</p>
+        </div>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Déposer des exports">
+          <div class="dz-title">Déposez ici les exports, en vrac</div>
+          <div class="dz-sub">Règles GTA (obligatoire) · Types de jour (recommandé) · Référentiels : taux, fonctions, types d'activité…</div>
+          <div class="dz-sub">Chaque fichier est reconnu à ses colonnes, pas à son nom.</div>
+        </div>
+        <div id="engine-status" class="engine-status" aria-live="polite">Démarrage du moteur…</div>
+        <ul id="file-list" class="file-list"></ul>
+        <div id="env-summary" class="env-summary" hidden></div>
+        <p class="privacy">Tout s'exécute dans votre navigateur. Aucun fichier n'est envoyé à un serveur.</p>
+      </div>
+    </section>
+
+    <section id="view-catalogue" class="view" data-view="catalogue" hidden>
+      <div class="view-toolbar">
+        <input id="cat-search" type="text" placeholder="Rechercher : libellé, #, code, texte…" aria-label="Rechercher une règle">
+        <select id="cat-contract" aria-label="Filtrer par type de contrat"><option value="">Tous les types de contrat</option></select>
+        <label class="toggle"><input type="checkbox" id="cat-counters"> Compteurs seulement</label>
+        <div class="seg" role="group" aria-label="Langue des descriptions">
+          <button data-lang="fr" aria-pressed="true">FR</button><button data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <span id="cat-count" class="muted"></span>
+      </div>
+      <div class="table-wrap"><table id="cat-table" class="grid">
+        <thead><tr><th class="c">Ordre</th><th class="c">#</th><th>Libellé</th><th>Libellé court</th><th>Code</th><th>Ce que fait la règle</th><th class="c">Compteur</th><th>Période</th><th class="c">Contrats</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+
+    <section id="view-audit" class="view" data-view="audit" hidden>
+      <div class="view-inner">
+        <div id="audit-body"></div>
+        <h3 class="subhead">Analyses du graphe</h3>
+        <p class="muted">Les vues détaillées de l'ancien Cartographe restent disponibles.</p>
+        <div class="btn-row">
+          <button data-analyse="audit">Audit du graphe</button>
+          <button data-analyse="counters">Vue par compteur</button>
+          <button data-analyse="contracts">Vue par type de contrat</button>
+          <button data-analyse="isolates">Règles isolées</button>
+          <button data-analyse="variables">Index des variables</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-dossier" class="view" data-view="dossier" hidden>
+      <div class="view-inner narrow">
+        <h2>Dossier de paramétrage</h2>
+        <p class="muted">Le classeur Excel remis au client : un Lisez-moi, le catalogue des règles dans leur ordre d'exécution avec une explication en langage clair, et le lexique des types de jour.</p>
+        <form id="dossier-form" class="form">
+          <label>Nom du client<input id="d-client" class="field" type="text" placeholder="Opéra de …" autocomplete="off"></label>
+          <label>Langue du dossier
+            <select id="d-langue"><option value="fr">Français</option><option value="en">Anglais</option></select>
+          </label>
+          <label class="toggle"><input type="checkbox" id="d-contrats" checked> Une colonne par type de contrat</label>
+          <button type="submit" class="primary" id="d-generate">Télécharger le dossier (.xlsx)</button>
+        </form>
+        <div id="dossier-refs"></div>
+        <div id="dossier-status" class="engine-status" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="global-drop" class="global-drop">Déposez les exports pour les ajouter à l'environnement</div>
+
+<script src="app/engine.js"></script>
+<script src="app/explorer/01-donnees.js"></script>
+<script src="app/explorer/02-constantes.js"></script>
+<script src="app/explorer/03-refs-cassees.js"></script>
+<script src="app/explorer/04-optimisations.js"></script>
+<script src="app/explorer/05-analyse-formules.js"></script>
+<script src="app/explorer/06-etat.js"></script>
+<script src="app/explorer/07-parser.js"></script>
+<script src="app/explorer/08-graphe.js"></script>
+<script src="app/explorer/09-ui.js"></script>
+<script src="app/explorer/10-analyse.js"></script>
+<script src="app/explorer/11-utils.js"></script>
+<script src="app/explorer/12-demarrage.js"></script>
+<script src="app/views.js"></script>
+<script src="app/shell.js"></script>
+</body>
+</html>
