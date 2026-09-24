@@ -42,7 +42,7 @@ const Analyse = {
   },
   node(id, extraClass) {
     const r = STATE.byId.get(id);
-    const lib = r ? richText(r.libelle_court || r.libelle || '') : '<span class="empty">absente</span>';
+    const lib = r ? richText(r.libelle_court || r.libelle || '') : `<span class="empty">${L('absente', 'missing')}</span>`;
     const jump = r ? ` data-jump="${id}"` : '';
     return `<span class="an-node ${extraClass || ''}"${jump}><span class="id">#${id}</span><span class="lib">${lib}</span></span>`;
   },
@@ -151,102 +151,107 @@ const Analyse = {
 
   /* --- Audit --- */
   audit() {
-    if (!STATE.rules || !STATE.rules.length) { toast('Chargez d\'abord un export de règles', 'warn'); return; }
+    if (!STATE.rules || !STATE.rules.length) { toast(L('Chargez d\'abord un export de règles', 'Load a rules export first'), 'warn'); return; }
     const s = Analyse.stats();
     const degRows = (map, emptyMsg) => {
       const top = [...map.entries()].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 10);
       if (!top.length) return `<div class="an-empty">${emptyMsg}</div>`;
-      return `<table class="an-table"><thead><tr><th>Règle</th><th class="num">Nombre</th></tr></thead><tbody>${
+      return `<table class="an-table"><thead><tr><th>${L('Règle', 'Rule')}</th><th class="num">${L('Nombre', 'Count')}</th></tr></thead><tbody>${
         top.map(([id, n]) => `<tr><td>${Analyse.node(id)}</td><td class="num">${n}</td></tr>`).join('')
       }</tbody></table>`;
     };
     const cov = s.formulaRules.length ? Math.round(100 * s.explained / s.formulaRules.length) : null;
-    Analyse.modal('Audit du paramétrage',
-      `${s.rules.length} règles · ${(STATE.edges || []).length} dépendances · ${s.formulaRules.length} formules`, `
+    Analyse.modal(L('Audit du graphe', 'Graph audit'),
+      `${Ln(s.rules.length, 'règle', 'règles', 'rule', 'rules')} · ${Ln((STATE.edges || []).length, 'dépendance', 'dépendances', 'dependency', 'dependencies')} · ${Ln(s.formulaRules.length, 'formule', 'formules', 'formula', 'formulas')}`, `
       <div class="an-kpis">
         <div class="an-kpi ${s.broken.length ? 'err' : 'ok'}">
-          <div class="k">Références cassées</div><div class="v">${s.broken.length}</div>
-          <div class="hint">Appels <code>ruleN</code> vers une règle absente de l'export</div>
+          <div class="k">${L('Références cassées', 'Broken references')}</div><div class="v">${s.broken.length}</div>
+          <div class="hint">${L("Appels <code>ruleN</code> vers une règle absente de l'export", 'Calls to <code>ruleN</code> pointing to a rule missing from the export')}</div>
         </div>
         <div class="an-kpi ${s.cycles.length ? 'err' : 'ok'}">
-          <div class="k">Cycles de dépendances</div><div class="v">${s.cycles.length}</div>
-          <div class="hint">Règles qui finissent par s'appeler entre elles</div>
+          <div class="k">${L('Cycles de dépendances', 'Dependency cycles')}</div><div class="v">${s.cycles.length}</div>
+          <div class="hint">${L("Règles qui finissent par s'appeler entre elles", 'Rules that end up calling each other')}</div>
         </div>
         <div class="an-kpi ${s.order.late.length ? 'err' : 'ok'}">
-          <div class="k">Règles lues trop tard</div><div class="v">${s.order.late.length}</div>
-          <div class="hint">Lisent une règle calculée après elles : valeur du jour absente</div>
+          <div class="k">${L('Règles lues trop tard', 'Rules read too late')}</div><div class="v">${s.order.late.length}</div>
+          <div class="hint">${L('Lisent une règle calculée après elles : valeur du jour absente', "Read a rule calculated after them: the day's value is missing")}</div>
         </div>
         <div class="an-kpi ${s.unassigned.length ? 'warn' : 'ok'}">
-          <div class="k">Règles sans affectation</div><div class="v">${s.unassigned.length}</div>
-          <div class="hint">Rattachées à aucun type de contrat, donc jamais calculées</div>
+          <div class="k">${L('Règles sans affectation', 'Unassigned rules')}</div><div class="v">${s.unassigned.length}</div>
+          <div class="hint">${L('Rattachées à aucun type de contrat, donc jamais calculées', 'Attached to no contract type, so never calculated')}</div>
         </div>
         <div class="an-kpi">
-          <div class="k">Règles isolées</div><div class="v">${s.isolates.length}</div>
-          <div class="hint">Ni amont ni aval — normal pour une règle compteur</div>
+          <div class="k">${L('Règles isolées', 'Isolated rules')}</div><div class="v">${s.isolates.length}</div>
+          <div class="hint">${L('Ni amont ni aval — normal pour une règle compteur', 'Neither upstream nor downstream — normal for a counter rule')}</div>
         </div>
       </div>
 
       <div class="an-section">
-        <h3>Complexité des formules</h3>
-        <p class="an-note">Ces mesures décrivent la difficulté de lecture du paramétrage, pas sa justesse.</p>
-        <table class="an-table"><thead><tr><th>Indicateur</th><th class="num">Valeur</th><th>Lecture</th></tr></thead><tbody>
-          <tr><td>Formules du paramétrage</td><td class="num">${s.formulaRules.length}</td>
-              <td>${cov === null ? 'Aucune formule détectée' : `${s.explained} traduites automatiquement en français (${cov} %) — les autres restent affichées telles quelles`}</td></tr>
-          <tr><td>Imbrication maximale de <code>if()</code></td><td class="num">${s.maxIf}</td>
+        <h3>${L('Complexité des formules', 'Formula complexity')}</h3>
+        <p class="an-note">${L('Ces mesures décrivent la difficulté de lecture du paramétrage, pas sa justesse.', 'These measures describe how hard the configuration is to read, not whether it is correct.')}</p>
+        <table class="an-table"><thead><tr><th>${L('Indicateur', 'Indicator')}</th><th class="num">${L('Valeur', 'Value')}</th><th>${L('Lecture', 'Reading')}</th></tr></thead><tbody>
+          <tr><td>${L('Formules du paramétrage', 'Formulas in the configuration')}</td><td class="num">${s.formulaRules.length}</td>
+              <td>${cov === null ? L('Aucune formule détectée', 'No formula found')
+                : L(`${s.explained} traduites automatiquement en langage clair (${cov} %) — les autres restent affichées telles quelles`,
+                    `${s.explained} translated automatically into plain language (${cov}%) — the others are shown as they are`)}</td></tr>
+          <tr><td>${L('Imbrication maximale de', 'Maximum nesting of')} <code>if()</code></td><td class="num">${s.maxIf}</td>
               <td>${s.maxIf >= 3
-                    ? `<span class="an-tag warn">Difficile à relire</span>${s.deepest ? ' ' + Analyse.node(s.deepest.id) : ''}`
-                    : '<span class="an-tag ok">Lisible</span>'}</td></tr>
-          <tr><td>Formules identiques entre règles</td><td class="num">${(s.opt.identical || []).length}</td>
-              <td><span class="an-tag info">Similarité — pas forcément une erreur</span></td></tr>
-          <tr><td>Sous-expressions répétées</td><td class="num">${(s.opt.repeated || []).length}</td>
-              <td><span class="an-tag info">Piste de rationalisation</span></td></tr>
+                    ? `<span class="an-tag warn">${L('Difficile à relire', 'Hard to read')}</span>${s.deepest ? ' ' + Analyse.node(s.deepest.id) : ''}`
+                    : `<span class="an-tag ok">${L('Lisible', 'Readable')}</span>`}</td></tr>
+          <tr><td>${L('Formules identiques entre règles', 'Identical formulas across rules')}</td><td class="num">${(s.opt.identical || []).length}</td>
+              <td><span class="an-tag info">${L('Similarité — pas forcément une erreur', 'Similarity — not necessarily an error')}</span></td></tr>
+          <tr><td>${L('Sous-expressions répétées', 'Repeated sub-expressions')}</td><td class="num">${(s.opt.repeated || []).length}</td>
+              <td><span class="an-tag info">${L('Piste de rationalisation', 'Room for simplification')}</span></td></tr>
         </tbody></table>
       </div>
 
-      ${(s.order.late.length || s.order.tie.length) ? `<div class="an-section"><h3>Ordre d'évaluation</h3>
-        <p class="an-note">L'ordre effectif est « SA : Ordre technique » quand il diffère de zéro, sinon la colonne « Ordre ». La documentation du type <code>_039</code> le rappelle : une règle citée par <code>ruleN</code> doit être calculée <strong>avant</strong> celle qui la lit, sinon la valeur du jour n'est pas encore disponible.</p>
-        ${s.order.late.length ? `<h3 style="margin-top:12px">Lues trop tard <span class="an-tag err">${s.order.late.length}</span></h3>
-          <p class="an-note">La règle qui lit est calculée avant la règle qu'elle lit. À corriger en priorité quand l'origine est une référence en formule.</p>
+      ${(s.order.late.length || s.order.tie.length) ? `<div class="an-section"><h3>${L("Ordre d'évaluation", 'Evaluation order')}</h3>
+        <p class="an-note">${L("L'ordre effectif est « SA : Ordre technique » quand il diffère de zéro, sinon la colonne « Ordre ». La documentation du type <code>_039</code> le rappelle : une règle citée par <code>ruleN</code> doit être calculée <strong>avant</strong> celle qui la lit, sinon la valeur du jour n'est pas encore disponible.",
+          "The effective order is “SA: Technical order” when it is not zero, otherwise the “Order” column. As the <code>_039</code> documentation points out, a rule cited by <code>ruleN</code> must be calculated <strong>before</strong> the rule that reads it, otherwise the day's value is not yet available.")}</p>
+        ${s.order.late.length ? `<h3 style="margin-top:12px">${L('Lues trop tard', 'Read too late')} <span class="an-tag err">${s.order.late.length}</span></h3>
+          <p class="an-note">${L("La règle qui lit est calculée avant la règle qu'elle lit. À corriger en priorité quand l'origine est une référence en formule.", 'The reading rule is calculated before the rule it reads. Fix these first when the reference comes from a formula.')}</p>
           ${Analyse.orderTable(s.order.late)}` : ''}
-        ${s.order.tie.length ? `<h3 style="margin-top:16px">Même rang d'évaluation <span class="an-tag warn">${s.order.tie.length}</span></h3>
-          <p class="an-note">Les deux règles portent le même ordre effectif : la séquence entre elles n'est pas garantie. À départager si la dépendance compte.</p>
+        ${s.order.tie.length ? `<h3 style="margin-top:16px">${L("Même rang d'évaluation", 'Same evaluation rank')} <span class="an-tag warn">${s.order.tie.length}</span></h3>
+          <p class="an-note">${L("Les deux règles portent le même ordre effectif : la séquence entre elles n'est pas garantie. À départager si la dépendance compte.", 'Both rules have the same effective order: their sequence is not guaranteed. Separate them if the dependency matters.')}</p>
           ${Analyse.orderTable(s.order.tie)}` : ''}
-        ${s.order.unknown.length ? `<p class="an-note">${s.order.unknown.length} dépendance(s) dont l'ordre n'a pu être établi (colonne « Ordre » absente de l'export).</p>` : ''}
+        ${s.order.unknown.length ? `<p class="an-note">${L(`${s.order.unknown.length} dépendance(s) dont l'ordre n'a pu être établi (colonne « Ordre » absente de l'export).`, `${s.order.unknown.length} dependenc${s.order.unknown.length > 1 ? 'ies' : 'y'} whose order could not be established (“Order” column missing from the export).`)}</p>` : ''}
       </div>` : ''}
 
-      ${s.broken.length ? `<div class="an-section"><h3>Références cassées</h3>
-        <table class="an-table"><thead><tr><th>Règle appelante</th><th>Appel</th></tr></thead><tbody>${
+      ${s.broken.length ? `<div class="an-section"><h3>${L('Références cassées', 'Broken references')}</h3>
+        <table class="an-table"><thead><tr><th>${L('Règle appelante', 'Calling rule')}</th><th>${L('Appel', 'Call')}</th></tr></thead><tbody>${
           s.broken.map(x => `<tr><td>${Analyse.node(x.from)}</td><td><span class="an-tag err">rule${x.to}</span></td></tr>`).join('')
         }</tbody></table></div>` : ''}
 
-      ${s.cycles.length ? `<div class="an-section"><h3>Cycles de dépendances</h3>
-        <p class="an-note">Un cycle empêche un ordre de calcul déterministe : à vérifier en priorité.</p>${
+      ${s.cycles.length ? `<div class="an-section"><h3>${L('Cycles de dépendances', 'Dependency cycles')}</h3>
+        <p class="an-note">${L('Un cycle empêche un ordre de calcul déterministe : à vérifier en priorité.', 'A cycle prevents a deterministic calculation order: check it first.')}</p>${
           s.cycles.map(c => `<div>${c.map(id => Analyse.node(id)).join('<span class="an-tag">→</span>')}<span class="an-tag">→</span>${Analyse.node(c[0])}</div>`).join('')
         }</div>` : ''}
 
-      ${s.unassigned.length ? `<div class="an-section"><h3>Règles sans affectation</h3>
-        <p class="an-note">Aucun type de contrat ne porte ces règles : elles ne produisent rien tant qu'une affectation n'est pas ajoutée.</p>
+      ${s.unassigned.length ? `<div class="an-section"><h3>${L('Règles sans affectation', 'Unassigned rules')}</h3>
+        <p class="an-note">${L("Aucun type de contrat ne porte ces règles : elles ne produisent rien tant qu'une affectation n'est pas ajoutée.", 'No contract type carries these rules: they produce nothing until an assignment is added.')}</p>
         <div>${s.unassigned.slice(0, 60).map(r => Analyse.node(r.id)).join('')}</div>
-        ${s.unassigned.length > 60 ? `<p class="an-note">… et ${s.unassigned.length - 60} autres.</p>` : ''}</div>` : ''}
+        ${s.unassigned.length > 60 ? `<p class="an-note">${L(`… et ${s.unassigned.length - 60} autres.`, `… and ${s.unassigned.length - 60} more.`)}</p>` : ''}</div>` : ''}
 
-      <div class="an-section"><h3>Règles les plus consommées</h3>
-        <p class="an-note">Modifier l'une de ces règles se répercute sur beaucoup d'autres.</p>
-        ${degRows(s.inDeg, 'Aucune règle n\'est consommée par une autre.')}</div>
+      <div class="an-section"><h3>${L('Règles les plus consommées', 'Most used rules')}</h3>
+        <p class="an-note">${L("Modifier l'une de ces règles se répercute sur beaucoup d'autres.", 'Changing one of these rules affects many others.')}</p>
+        ${degRows(s.inDeg, L('Aucune règle n\'est consommée par une autre.', 'No rule is used by another.'))}</div>
 
-      <div class="an-section"><h3>Règles qui consomment le plus d'autres règles</h3>
-        ${degRows(s.outDeg, 'Aucune règle ne dépend d\'une autre.')}</div>
+      <div class="an-section"><h3>${L("Règles qui consomment le plus d'autres règles", 'Rules that use the most other rules')}</h3>
+        ${degRows(s.outDeg, L('Aucune règle ne dépend d\'une autre.', 'No rule depends on another.'))}</div>
     `);
   },
 
   /* --- Règles isolées --- */
   isolates() {
-    if (!STATE.rules || !STATE.rules.length) { toast('Chargez d\'abord un export de règles', 'warn'); return; }
+    if (!STATE.rules || !STATE.rules.length) { toast(L('Chargez d\'abord un export de règles', 'Load a rules export first'), 'warn'); return; }
     const list = Analyse.stats().isolates;
-    if (!list.length) { toast('Aucune règle isolée', 'ok'); return; }
-    Analyse.modal('Règles isolées',
-      `${list.length} règle(s) sur ${STATE.rules.length} sans dépendance entrante ni sortante`, `
-      <p class="an-note">Ce n'est pas une anomalie en soi : une règle compteur alimentant directement la paie n'a pas besoin d'être consommée par une autre règle. La liste sert à repérer celles qu'on aurait oublié de brancher.</p>
-      <table class="an-table"><thead><tr><th>Règle</th><th>Libellé</th><th>Type</th></tr></thead><tbody>${
+    if (!list.length) { toast(L('Aucune règle isolée', 'No isolated rule'), 'ok'); return; }
+    Analyse.modal(L('Règles isolées', 'Isolated rules'),
+      L(`${list.length} règle(s) sur ${STATE.rules.length} sans dépendance entrante ni sortante`,
+        `${list.length} of ${STATE.rules.length} rules with no incoming or outgoing dependency`), `
+      <p class="an-note">${L("Ce n'est pas une anomalie en soi : une règle compteur alimentant directement la paie n'a pas besoin d'être consommée par une autre règle. La liste sert à repérer celles qu'on aurait oublié de brancher.",
+        'This is not an anomaly in itself: a counter rule feeding payroll directly does not need to be used by another rule. The list helps spot the ones someone forgot to connect.')}</p>
+      <table class="an-table"><thead><tr><th>${L('Règle', 'Rule')}</th><th>${L('Libellé', 'Name')}</th><th>Type</th></tr></thead><tbody>${
         list.map(r => `<tr><td>${Analyse.node(r.id)}</td><td>${richText(r.libelle || '')}</td><td>${escapeHtml(r.rule_type || '')}</td></tr>`).join('')
       }</tbody></table>`);
   },
@@ -278,17 +283,20 @@ const Analyse = {
       `<div class="an-layer"><div class="an-layer-label">${label} ${i + 1}</div><div class="an-layer-nodes">${ids.map(x => Analyse.node(x)).join('')}</div></div>`).join('');
     const totalUp = up.reduce((n, a) => n + a.length, 0);
     const totalDown = down.reduce((n, a) => n + a.length, 0);
-    Analyse.modal(`Chaîne de calcul — règle #${id}`,
+    const level = L('Niveau', 'Level');
+    Analyse.modal(L(`Chaîne de calcul — règle #${id}`, `Calculation chain — rule #${id}`),
       plainText(root.libelle_court || root.libelle || ''), `
       <div class="an-chain">
-        <div class="an-layer"><div class="an-layer-label">Règle</div><div class="an-layer-nodes">${Analyse.node(id, 'self')}</div></div>
+        <div class="an-layer"><div class="an-layer-label">${L('Règle', 'Rule')}</div><div class="an-layer-nodes">${Analyse.node(id, 'self')}</div></div>
       </div>
-      <div class="an-section"><h3>Amont — ce dont cette règle a besoin</h3>
-        <p class="an-note">${totalUp ? `${totalUp} règle(s) sur ${up.length} niveau(x). Le niveau 1 correspond aux dépendances directes.` : 'Cette règle ne dépend d\'aucune autre.'}</p>
-        <div class="an-chain">${render(up, 'Niveau')}</div></div>
-      <div class="an-section"><h3>Aval — ce que cette règle impacte</h3>
-        <p class="an-note">${totalDown ? `${totalDown} règle(s) sur ${down.length} niveau(x). Une modification ici se propage à toute cette liste.` : 'Aucune autre règle ne consomme cette règle.'}</p>
-        <div class="an-chain">${render(down, 'Niveau')}</div></div>`);
+      <div class="an-section"><h3>${L('Amont — ce dont cette règle a besoin', 'Upstream — what this rule needs')}</h3>
+        <p class="an-note">${totalUp ? L(`${totalUp} règle(s) sur ${up.length} niveau(x). Le niveau 1 correspond aux dépendances directes.`, `${totalUp} rule(s) over ${up.length} level(s). Level 1 holds the direct dependencies.`)
+          : L('Cette règle ne dépend d\'aucune autre.', 'This rule depends on no other rule.')}</p>
+        <div class="an-chain">${render(up, level)}</div></div>
+      <div class="an-section"><h3>${L('Aval — ce que cette règle impacte', 'Downstream — what this rule affects')}</h3>
+        <p class="an-note">${totalDown ? L(`${totalDown} règle(s) sur ${down.length} niveau(x). Une modification ici se propage à toute cette liste.`, `${totalDown} rule(s) over ${down.length} level(s). A change here spreads to this whole list.`)
+          : L('Aucune autre règle ne consomme cette règle.', 'No other rule uses this rule.')}</p>
+        <div class="an-chain">${render(down, level)}</div></div>`);
   },
 
   /* --- Ordre d'évaluation ----------------------------------------------
@@ -337,15 +345,15 @@ const Analyse = {
 
   orderTable(rows) {
     return `<table class="an-table">
-      <thead><tr><th>Règle qui lit</th><th class="num">Ordre</th><th>Règle lue</th><th class="num">Ordre</th><th>Origine</th></tr></thead>
+      <thead><tr><th>${L('Règle qui lit', 'Reading rule')}</th><th class="num">${L('Ordre', 'Order')}</th><th>${L('Règle lue', 'Rule read')}</th><th class="num">${L('Ordre', 'Order')}</th><th>${L('Origine', 'Origin')}</th></tr></thead>
       <tbody>${rows.map(x => `<tr>
         <td>${Analyse.node(x.cons.id)}</td>
         <td class="num">${Analyse.effOrderLabel(x.cons)}</td>
         <td>${Analyse.node(x.src.id)}</td>
         <td class="num">${Analyse.effOrderLabel(x.src)}</td>
         <td>${x.inline
-              ? `<span class="an-tag err">rule${x.src.id} en formule</span>`
-              : `<span class="an-tag">paramètre</span>`}</td>
+              ? `<span class="an-tag err">rule${x.src.id} ${L('en formule', 'in formula')}</span>`
+              : `<span class="an-tag">${L('paramètre', 'setting')}</span>`}</td>
       </tr>`).join('')}</tbody></table>`;
   },
 
@@ -356,15 +364,25 @@ const Analyse = {
    * sinon un mot de la clé « Day types » serait pris pour une variable.
    * -------------------------------------------------------------------- */
   VAR_FAMILIES: [
-    ['temps',      'Temps et plages',                'Heures et minutes par type de jour, durées et bornes par plage.'],
-    ['calendrier', 'Calendrier',                     'Position de la journée dans la semaine, le mois, l\'année.'],
-    ['regles',     'Autres règles et historique',    'Valeurs d\'autres règles du même jour, et report de la veille.'],
-    ['contrat',    'Contrat',                        'Taux, éléments financiers, champs personnalisés, type de contrat.'],
-    ['activite',   'Activité, tâche, production',    'Filtres par tâche, type d\'activité, production, rôle — surtout en SBS.'],
-    ['mapping',    'Table de correspondance',        'Valeurs issues des tables de conversion (latest_*).'],
-    ['parametres', 'Références par paramètre',       'Identifiants cités dans les paramètres structurés, hors formule.'],
-    ['inconnu',    'Identifiants non reconnus',      'Ne correspondent à aucune variable ni fonction documentée : faute de frappe ou variable inexistante à vérifier.'],
-    ['fonctions',  'Fonctions et mots-clés',         'Pour information : quelles fonctions le paramétrage utilise réellement.']
+    // [famille, [libellé FR, EN], [note FR, EN]]
+    ['temps',      ['Temps et plages', 'Time and shifts'],
+                   ['Heures et minutes par type de jour, durées et bornes par plage.', 'Hours and minutes per day type, shift durations and bounds.']],
+    ['calendrier', ['Calendrier', 'Calendar'],
+                   ['Position de la journée dans la semaine, le mois, l\'année.', 'Position of the day in the week, month and year.']],
+    ['regles',     ['Autres règles et historique', 'Other rules and history'],
+                   ['Valeurs d\'autres règles du même jour, et report de la veille.', 'Values of other rules on the same day, and carry-over from the day before.']],
+    ['contrat',    ['Contrat', 'Contract'],
+                   ['Taux, éléments financiers, champs personnalisés, type de contrat.', 'Rates, financial elements, custom fields, contract type.']],
+    ['activite',   ['Activité, tâche, production', 'Activity, task, production'],
+                   ['Filtres par tâche, type d\'activité, production, rôle — surtout en SBS.', 'Filters by task, activity type, production, role — mostly in SBS.']],
+    ['mapping',    ['Table de correspondance', 'Mapping table'],
+                   ['Valeurs issues des tables de conversion (latest_*).', 'Values taken from conversion tables (latest_*).']],
+    ['parametres', ['Références par paramètre', 'References in settings'],
+                   ['Identifiants cités dans les paramètres structurés, hors formule.', 'Ids cited in structured settings, outside formulas.']],
+    ['inconnu',    ['Identifiants non reconnus', 'Unrecognised identifiers'],
+                   ['Ne correspondent à aucune variable ni fonction documentée : faute de frappe ou variable inexistante à vérifier.', 'Match no documented variable or function: a typo or a non-existent variable to check.']],
+    ['fonctions',  ['Fonctions et mots-clés', 'Functions and keywords'],
+                   ['Pour information : quelles fonctions le paramétrage utilise réellement.', 'For information: which functions the configuration actually uses.']]
   ],
 
   classifyToken(t) {
@@ -431,10 +449,11 @@ const Analyse = {
   },
 
   variables() {
-    if (!STATE.rules || !STATE.rules.length) { toast('Chargez d\'abord un export de règles', 'warn'); return; }
+    if (!STATE.rules || !STATE.rules.length) { toast(L('Chargez d\'abord un export de règles', 'Load a rules export first'), 'warn'); return; }
     const idx = Analyse.scanVariables();
     const total = [...idx.values()].reduce((n, m) => n + m.size, 0);
-    const sections = Analyse.VAR_FAMILIES.map(([fam, label, note]) => {
+    const sections = Analyse.VAR_FAMILIES.map(([fam, labels, notes]) => {
+      const label = L(labels[0], labels[1]), note = L(notes[0], notes[1]);
       const fm = idx.get(fam);
       if (!fm || !fm.size) return '';
       const rows = [...fm.entries()]
@@ -452,13 +471,13 @@ const Analyse = {
       return `<div class="an-section" data-fam="${fam}">
         <h3>${escapeHtml(label)} <span class="an-tag">${fm.size}</span></h3>
         <p class="an-note">${escapeHtml(note)}</p>
-        <table class="an-table"><thead><tr><th>Variable</th><th class="num">Règles</th><th>Utilisée par</th></tr></thead><tbody>${rows}</tbody></table>
+        <table class="an-table"><thead><tr><th>Variable</th><th class="num">${L('Règles', 'Rules')}</th><th>${L('Utilisée par', 'Used by')}</th></tr></thead><tbody>${rows}</tbody></table>
       </div>`;
     }).join('');
-    Analyse.modal('Index des variables',
-      `${total} identifiants distincts relevés dans ${STATE.rules.length} règles`,
-      `<input id="an-var-filter" class="an-filter" type="text" placeholder="Filtrer : htime, rule12, field, idtask…" autocomplete="off">
-       <div id="an-var-body">${sections || '<div class="an-empty">Aucune variable relevée.</div>'}</div>`);
+    Analyse.modal(L('Index des variables', 'Variable index'),
+      L(`${total} identifiants distincts relevés dans ${STATE.rules.length} règles`, `${total} distinct identifiers found in ${STATE.rules.length} rules`),
+      `<input id="an-var-filter" class="an-filter" type="text" placeholder="${L('Filtrer : htime, rule12, field, idtask…', 'Filter: htime, rule12, field, idtask…')}" autocomplete="off">
+       <div id="an-var-body">${sections || `<div class="an-empty">${L('Aucune variable relevée.', 'No variable found.')}</div>`}</div>`);
     const inp = document.getElementById('an-var-filter');
     if (inp) {
       inp.addEventListener('input', () => {
@@ -514,14 +533,14 @@ const Analyse = {
   },
 
   ruleTypeShort(rt) {
-    const doc = (typeof RULE_TYPE_DOC !== 'undefined') && RULE_TYPE_DOC[rt];
+    const doc = (I18N.lang === 'en' && RULE_TYPE_DOC_EN[rt]) || ((typeof RULE_TYPE_DOC !== 'undefined') && RULE_TYPE_DOC[rt]);
     if (doc && doc.title) return doc.title;
     return String(rt || '').replace(/^_\d+_(STD|AIX|COB|IND|SBS)_/, '').replace(/_/g, ' ');
   },
 
   affectChips(r) {
     const list = Analyse.parseAffect(r);
-    if (!list.length) return '<span class="an-tag warn">aucune affectation</span>';
+    if (!list.length) return `<span class="an-tag warn">${L('aucune affectation', 'no assignment')}</span>`;
     return list.map(a => `<span class="an-tag">${richText(a.lib)}</span>`).join(' ');
   },
 
@@ -538,24 +557,24 @@ const Analyse = {
   // Tableau « séquence de calcul » commun aux deux vues.
   sequenceTable(rules, levels) {
     return `<table class="an-table">
-      <thead><tr><th class="num">Ordre</th><th>Règle</th><th>Type de calcul</th>${levels ? '<th class="num">Niveau</th>' : '<th>Compteur</th>'}</tr></thead>
+      <thead><tr><th class="num">${L('Ordre', 'Order')}</th><th>${L('Règle', 'Rule')}</th><th>${L('Type de calcul', 'Calculation type')}</th>${levels ? `<th class="num">${L('Niveau', 'Level')}</th>` : `<th>${L('Compteur', 'Counter')}</th>`}</tr></thead>
       <tbody>${rules.map(r => `<tr>
         <td class="num">${Analyse.effOrderLabel(r)}</td>
         <td>${Analyse.node(r.id)}</td>
         <td>${escapeHtml(Analyse.ruleTypeShort(r.rule_type))}</td>
         ${levels
           ? `<td class="num">${levels.get(r.id) || ''}</td>`
-          : `<td>${r.compteur ? '<span class="an-tag ok">compteur</span>' : ''}</td>`}
+          : `<td>${r.compteur ? `<span class="an-tag ok">${L('compteur', 'counter')}</span>` : ''}</td>`}
       </tr>`).join('')}</tbody></table>`;
   },
 
   /* --- Vue par compteur --- */
   counters() {
-    if (!STATE.rules || !STATE.rules.length) { toast('Chargez d\'abord un export de règles', 'warn'); return; }
+    if (!STATE.rules || !STATE.rules.length) { toast(L('Chargez d\'abord un export de règles', 'Load a rules export first'), 'warn'); return; }
     const counters = STATE.rules.filter(r => r.compteur).sort(Analyse.byEffOrder);
     if (!counters.length) {
-      Analyse.modal('Vue par compteur', `${STATE.rules.length} règles`,
-        `<div class="an-empty">Aucune règle n'est marquée « compteur » dans cet export. Le paramétrage n'expose donc aucun résultat par ce biais — à vérifier avec le client.</div>`);
+      Analyse.modal(L('Vue par compteur', 'View by counter'), Ln(STATE.rules.length, 'règle', 'règles', 'rule', 'rules'),
+        `<div class="an-empty">${L("Aucune règle n'est marquée « compteur » dans cet export. Le paramétrage n'expose donc aucun résultat par ce biais — à vérifier avec le client.", 'No rule is marked as a “counter” in this export, so the configuration exposes no result this way — to check with the client.')}</div>`);
       return;
     }
     // Règles qui ne contribuent à aucun compteur : information utile, souvent
@@ -566,24 +585,25 @@ const Analyse = {
       for (const k of levels.keys()) contributing.add(k);
       const feeders = [...levels.keys()].map(id => STATE.byId.get(id)).filter(Boolean).sort(Analyse.byEffOrder);
       return `<div class="an-section">
-        <h3>${Analyse.node(c.id)} <span class="an-tag ok">compteur</span></h3>
+        <h3>${Analyse.node(c.id)} <span class="an-tag ok">${L('compteur', 'counter')}</span></h3>
         <p class="an-note">
           ${escapeHtml(Analyse.ruleTypeShort(c.rule_type))}
-          ${c.periode ? ' · période ' + escapeHtml(c.periode) : ''}
-          · ordre d'évaluation ${Analyse.effOrderLabel(c)}
-          · ${feeders.length ? `${feeders.length} règle(s) en amont` : 'se calcule seule, sans dépendance'}
+          ${c.periode ? ' · ' + L('période ', 'period ') + escapeHtml(c.periode) : ''}
+          · ${L("ordre d'évaluation", 'evaluation order')} ${Analyse.effOrderLabel(c)}
+          · ${feeders.length ? L(`${feeders.length} règle(s) en amont`, `${feeders.length} upstream rule(s)`) : L('se calcule seule, sans dépendance', 'calculated on its own, no dependency')}
           <br>${Analyse.affectChips(c)}
         </p>
         ${feeders.length ? Analyse.sequenceTable(feeders, levels) : ''}
       </div>`;
     }).join('');
     const orphans = STATE.rules.filter(r => !contributing.has(r.id)).sort(Analyse.byEffOrder);
-    Analyse.modal('Vue par compteur',
-      `${counters.length} compteur(s) sur ${STATE.rules.length} règles`, `
-      <p class="an-note">Chaque compteur est un résultat exploité en paie ou en suivi. Sous chacun, tout ce qui l'alimente, du premier calcul au dernier, dans l'ordre où #Dièse les exécute. La colonne « Niveau » indique la distance au compteur : 1 pour une dépendance directe.</p>
+    Analyse.modal(L('Vue par compteur', 'View by counter'),
+      L(`${counters.length} compteur(s) sur ${STATE.rules.length} règles`, `${counters.length} counter(s) out of ${STATE.rules.length} rules`), `
+      <p class="an-note">${L("Chaque compteur est un résultat exploité en paie ou en suivi. Sous chacun, tout ce qui l'alimente, du premier calcul au dernier, dans l'ordre où #Dièse les exécute. La colonne « Niveau » indique la distance au compteur : 1 pour une dépendance directe.",
+        'Each counter is a result used for payroll or tracking. Under each one, everything that feeds it, from the first calculation to the last, in the order #Dièse runs them. The “Level” column gives the distance to the counter: 1 for a direct dependency.')}</p>
       ${blocks}
-      ${orphans.length ? `<div class="an-section"><h3>Ne contribuent à aucun compteur <span class="an-tag">${orphans.length}</span></h3>
-        <p class="an-note">Ces règles sont calculées mais leur valeur n'alimente aucun compteur. Souvent un reste de paramétrage, parfois une règle lue ailleurs que dans la GTA — à passer en revue.</p>
+      ${orphans.length ? `<div class="an-section"><h3>${L('Ne contribuent à aucun compteur', 'Feed no counter')} <span class="an-tag">${orphans.length}</span></h3>
+        <p class="an-note">${L("Ces règles sont calculées mais leur valeur n'alimente aucun compteur. Souvent un reste de paramétrage, parfois une règle lue ailleurs que dans la GTA — à passer en revue.", 'These rules are calculated but their value feeds no counter. Often a leftover of the configuration, sometimes a rule read outside the GTA module — worth reviewing.')}</p>
         ${Analyse.sequenceTable(orphans, null)}</div>` : ''}`);
   },
 
@@ -600,20 +620,20 @@ const Analyse = {
   },
 
   contracts(preselect) {
-    if (!STATE.rules || !STATE.rules.length) { toast('Chargez d\'abord un export de règles', 'warn'); return; }
+    if (!STATE.rules || !STATE.rules.length) { toast(L('Chargez d\'abord un export de règles', 'Load a rules export first'), 'warn'); return; }
     const types = Analyse.contractTypes();
     if (!types.length) {
-      Analyse.modal('Vue par type de contrat', `${STATE.rules.length} règles`,
-        `<div class="an-empty">Aucune affectation n'est renseignée dans cet export : impossible de reconstituer une séquence par type de contrat.</div>`);
+      Analyse.modal(L('Vue par type de contrat', 'View by contract type'), Ln(STATE.rules.length, 'règle', 'règles', 'rule', 'rules'),
+        `<div class="an-empty">${L("Aucune affectation n'est renseignée dans cet export : impossible de reconstituer une séquence par type de contrat.", 'No assignment is filled in this export: the sequence per contract type cannot be rebuilt.')}</div>`);
       return;
     }
     const sel = types.find(t => String(t.id) === String(preselect)) || types[0];
-    Analyse.modal('Vue par type de contrat',
-      `${types.length} type(s) de contrat dans cet export`, `
+    Analyse.modal(L('Vue par type de contrat', 'View by contract type'),
+      L(`${types.length} type(s) de contrat dans cet export`, `${types.length} contract type(s) in this export`), `
       <div class="an-toolbar">
-        <label for="an-contract-sel">Type de contrat</label>
+        <label for="an-contract-sel">${L('Type de contrat', 'Contract type')}</label>
         <select id="an-contract-sel">${types.map(t =>
-          `<option value="${t.id}"${t.id === sel.id ? ' selected' : ''}>${escapeHtml(t.lib)} — ${t.rules.length} règle(s)</option>`).join('')}</select>
+          `<option value="${t.id}"${t.id === sel.id ? ' selected' : ''}>${escapeHtml(t.lib)} — ${Ln(t.rules.length, 'règle', 'règles', 'rule', 'rules')}</option>`).join('')}</select>
       </div>
       <div id="an-contract-body"></div>`);
     const paint = (id) => {
@@ -624,7 +644,7 @@ const Analyse = {
       const counters = rules.filter(r => r.compteur);
       body.innerHTML = `<div class="an-section">
         <h3>${escapeHtml(t.lib)} <span class="an-tag">#${t.id}</span></h3>
-        <p class="an-note">${rules.length} règle(s) applicables, dans l'ordre où #Dièse les exécute${counters.length ? `, dont ${counters.length} compteur(s) : ${counters.map(c => Analyse.node(c.id)).join('')}` : ', dont aucun compteur'}</p>
+        <p class="an-note">${L(`${rules.length} règle(s) applicables, dans l'ordre où #Dièse les exécute`, `${rules.length} applicable rule(s), in the order #Dièse runs them`)}${counters.length ? L(`, dont ${counters.length} compteur(s) : `, `, including ${counters.length} counter(s): `) + counters.map(c => Analyse.node(c.id)).join('') : L(', dont aucun compteur', ', none of them a counter')}</p>
         ${Analyse.sequenceTable(rules, null)}
       </div>`;
       Analyse.bindJumps();

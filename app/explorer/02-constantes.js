@@ -51,7 +51,7 @@ const THEME = {
     document.documentElement.setAttribute('data-theme', this.current);
     const btn = document.getElementById('btn-theme');
     if (btn) {
-      const label = this.current === 'dark' ? 'Passer en thème clair' : 'Passer en thème sombre';
+      const label = this.current === 'dark' ? L('Passer en thème clair', 'Switch to light theme') : L('Passer en thème sombre', 'Switch to dark theme');
       btn.innerHTML = this.current === 'dark' ? '&#9788;' : '&#9790;';
       btn.title = label;
       btn.setAttribute('aria-label', label);
@@ -116,7 +116,10 @@ const CAT_CLASS = {
   // Équivalents anglais (mêmes classes CSS) — cf. export types de jour du client 2026-09
   'Counted worktime':'pal-cat-eff',
   'Uncounted worktime':'pal-cat-noneff',
-  'Absence (not counted)':'pal-cat-abs'
+  'Absence (not counted)':'pal-cat-abs',
+  // Libellés anglais produits par le moteur de l'Atelier (categorie_en)
+  'Effective working time':'pal-cat-eff',
+  'Non-effective working time':'pal-cat-noneff'
 };
 
 // Lecture humaine des rule_type — dictionnaire métier #Dièse.

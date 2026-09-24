@@ -10,7 +10,7 @@
     document.documentElement.setAttribute('data-theme', _t === 'dark' ? 'dark' : 'light');
   } catch (_) { document.documentElement.setAttribute('data-theme', 'light'); }
 </script>
-<title>Atelier GTA #Dièse — v2.0</title>
+<title>Atelier GTA #Dièse — v2.1</title>
 <meta name="description" content="Cartographie, audit, catalogue et dossier de paramétrage GTA #Dièse, dans le navigateur.">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAMFBMVEW8FiEAAADFHyrQXGS1CSPim5/67u/9AAC7FyK6FyJ/AADHOkPZfIPsvcH/AGPDGCTDdLDGAAAAEHRSTlP9AP7+D/7+AqBfAv///wJwpYcBKwAABFFJREFUeNp1lV1oFFcUx39zZ3ezq8V4d9euVZJONilNUraOmUbT9sVtHyzYBxtbLII1kCKtUEko7Zs1kUIjVGgNFBEK8aPQx6CEBvppwVZD1h1aiGJJXIsxW8xmRhsVrbvTh7ubTdbNPF2G35z/Ofc/5xxNAsDgqTGqPposnazdPdUAPQSAPRFNjW76aHRZ4MJLX/fPp34yt9rLSOhzGFOHR+2A2TpULULAu+s5YjLdfzs1selGNQl/1MVzxOTlgdlxvX36MUAInwt4Tv35KwM/Tg/mpitz2JDJFF/EC9nPD2AlhpYApvZTOWi88P73KboTPYsk1r7xXRlw7kzmevNnijUr4DXt50V5ec6dybH+2+kJc6sNUkoZi4rK+xFxDidldKtUEfwRtwJQNedSKkndF8xU8SnOzdlGJcFI2w7/L2/5t5/XO9sbd4y07fCbnUC8JaqHgCPuDxtWatNPaMYf4ul1Ul6sjWhmMA2Ou0oPAdnOc7PBc4Vsuu7qpbqrNyOpezXnHv0zA6LwrkrfBWqATA1w/z6fUKPS6LP1EHBrpMlcmU/UCTMmjHUyLO1I3lybBm17UAABOJjOpW0nnXNSTvrS3J5rOSfnAvXDaBJ0f42eX38hYQMY+jXzUqnQZuehHgIhfGu+vSYU8HqsJe46RWDNvCeA3c18tudjR13m5Zmp/VOlCP8BUsrkK+hGmz4MgNGIuWCILyYFwBYs6wVLAZZ1vt0oEQdaEUBXH/R4rpLI9OwvLLixGlBm67Tp6jtDL0uQ7JV6CN0Xcds7mkS7DfDqcyusuaL5Ru8AAvIegNdXlKBQUwoQ/FBJ9BjLSLREpdRDHBm1ae9oFM9cATj7b1nCXfUIAUOd5ZThi0X/ZX4nIOX1Q1SXEP1JKX1gzYFVF/70eAYgsmnyRTdTjinQqQfQ+pSEgXhQjFA/bAIy+pShJIYrJZpjUkofugdY/tZ51a6RJ/NmccxoeUCwqxlgrbZaSbQYR4VRNhtk8iigG226WWG38MWklEL90mfCDXH13frw2cay2SAw+4D+ExGpJNY1nAwbi25Or7XvAsFv3LSXBbiX/c27rPr3gWmDyPsNQISN4gQIhxsaimbvHQIEHoDcGNmocms80VaUCH4AIPS3AZxULq2qn9wzcU/dtKZq2WUvHQ193C+e/goACLsTQFoliVMnrBVG2WwEroHqza6ixDtzmWJnA9C7hbhRbVGIL5NSSomU0WNVESPZq4DTvTJ6TDyONMeklFJqklBrCuvNfcbUUqDlVn5hVodaU3RsPrQUaXLzC7P60cxe/eLFLdt+bXDKOd72L9163X+OhTZsPkkpijjYZS7aOJCe/ur6+Pjz2/6uVV2jbR/ILgFgJNudHx8/cDpe6wLeg67RpYsVIJBIDAX634sXMhg7j/M4oJDB+X1GITibrwpAKDFGd9O+Z+ceLgNAIJGi4+XB5QHonvi9YrFWPOkbgzNZdfwfRLlwaC7A1R0AAAAASUVORK5CYII=">
 <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
@@ -22,31 +22,36 @@
 <div id="app" data-view="accueil">
   <header>
     <span class="brand" id="brand" title="it4culture"></span>
-    <h1>Atelier GTA <span class="v" id="version-label">#Dièse · v2.0</span></h1>
-    <nav class="tabs" role="tablist" aria-label="Outils">
-      <button role="tab" data-view="accueil" aria-selected="true">Accueil</button>
+    <h1>Atelier GTA <span class="v" id="version-label">#Dièse · v2.1</span></h1>
+    <nav class="tabs" role="tablist" aria-label="Outils" data-en-aria="Tools">
+      <button role="tab" data-view="accueil" aria-selected="true"><span data-en="Home">Accueil</span></button>
       <button role="tab" data-view="explorer" disabled>Explorer</button>
       <button role="tab" data-view="catalogue" disabled>Catalogue</button>
-      <button role="tab" data-view="audit" disabled>Audit <span class="tab-badge" id="audit-badge" hidden></span></button>
-      <button role="tab" data-view="dossier" disabled>Dossier client</button>
+      <button role="tab" data-view="audit" disabled><span data-en="Audit">Audit</span> <span class="tab-badge" id="audit-badge" hidden></span></button>
+      <button role="tab" data-view="dossier" disabled><span data-en="Client dossier">Dossier client</span></button>
     </nav>
     <span class="stats explorer-only" id="stats"></span>
-    <div id="indicator-anom" class="hdr-indicator explorer-only" title="Cliquez pour détailler les appels vers des règles inexistantes">
+    <div id="indicator-anom" class="hdr-indicator explorer-only" title="Cliquez pour détailler les appels vers des règles inexistantes" data-en-title="Click for details of references to rules that do not exist">
       <span class="ind-icon">✓</span><span class="ind-text">Aucun appel caduc</span>
     </div>
     <div id="indicator-anom-panel" class="hdr-popover" hidden>
-      <h3>Appels caducs <span class="hint" id="anom-pop-stats"></span></h3>
+      <h3><span data-en="Broken references">Appels caducs</span> <span class="hint" id="anom-pop-stats"></span></h3>
       <div id="indicator-anom-list"></div>
     </div>
-    <div id="indicator-opti" class="hdr-indicator explorer-only" title="Pistes d'optimisation détectées dans les formules">
+    <div id="indicator-opti" class="hdr-indicator explorer-only" title="Pistes d'optimisation détectées dans les formules" data-en-title="Optimisation hints found in formulas">
       <span class="ind-icon">✓</span><span class="ind-text">Aucune piste d'optimisation</span>
     </div>
     <div id="indicator-opti-panel" class="hdr-popover hdr-popover-wide" hidden>
-      <h3>Optimisations possibles <span class="hint" id="opti-pop-stats"></span></h3>
+      <h3><span data-en="Possible optimisations">Optimisations possibles</span> <span class="hint" id="opti-pop-stats"></span></h3>
       <div id="indicator-opti-list"></div>
     </div>
     <div class="actions">
-      <button id="btn-add-files" class="primary" title="Déposer les exports #Dièse : règles, types de jour, référentiels">Déposer des exports…</button>
+      <div id="lang-switch" class="lang-switch" role="radiogroup" aria-label="Langue de l'interface" data-en-aria="Interface language" data-lang="fr">
+        <span class="lang-knob" aria-hidden="true"></span>
+        <button type="button" role="radio" data-lang="fr" lang="fr" title="Interface en français" aria-checked="true">FR</button>
+        <button type="button" role="radio" data-lang="en" lang="en" title="Interface in English" aria-checked="false">EN</button>
+      </div>
+      <button id="btn-add-files" class="primary" title="Déposer les exports #Dièse : règles, types de jour, référentiels" data-en-title="Drop the #Dièse exports: rules, day types, reference data" data-en="Drop exports…">Déposer des exports…</button>
       <input type="file" id="files-input" accept=".xlsx,.csv,.tsv" multiple hidden>
       <button id="btn-theme" title="Passer en thème sombre" aria-label="Passer en thème sombre">&#9790;</button>
     </div>
@@ -54,62 +59,62 @@
 
   <aside class="left">
     <section>
-      <h2>Recherche</h2>
-      <input id="search" type="text" placeholder="Nom, code, ID, libellé…">
+      <h2 data-en="Search">Recherche</h2>
+      <input id="search" type="text" placeholder="Nom, code, ID, libellé…" data-en-placeholder="Name, code, ID, label…">
       <div id="search-results"></div>
     </section>
     <section>
-      <h2>Filtre par affectation</h2>
+      <h2 data-en="Filter by assignment">Filtre par affectation</h2>
       <select id="filter-affect"><option value="">— Toutes les affectations —</option></select>
     </section>
     <section>
       <details class="fold">
-        <summary>Types de règle <span class="badge" id="legend-count">0</span></summary>
+        <summary><span data-en="Rule types">Types de règle</span> <span class="badge" id="legend-count">0</span></summary>
         <div class="fold-body"><div id="legend"></div></div>
       </details>
     </section>
     <section>
       <details class="fold">
-        <summary>Types de jour <span class="badge" id="dt-count">0</span></summary>
+        <summary><span data-en="Day types">Types de jour</span> <span class="badge" id="dt-count">0</span></summary>
         <div class="fold-body">
           <div id="dt-status" class="dt-status">Aucun référentiel chargé</div>
-          <label class="toggle"><input type="checkbox" id="toggle-dt-layer"> Afficher dans le graphe</label>
-          <p class="smallnote">Cliquez sur un type de jour pour mettre en évidence les règles qui l'utilisent.</p>
+          <label class="toggle"><input type="checkbox" id="toggle-dt-layer"> <span data-en="Show in the graph">Afficher dans le graphe</span></label>
+          <p class="smallnote" data-en="Click a day type to highlight the rules that use it.">Cliquez sur un type de jour pour mettre en évidence les règles qui l'utilisent.</p>
           <div id="dt-grid" class="dt-grid" style="margin-top:6px"></div>
         </div>
       </details>
     </section>
     <section>
-      <h2>Analyse</h2>
+      <h2 data-en="Analysis">Analyse</h2>
       <div class="analysis-actions">
-        <button id="btn-audit-side" class="btn-wide">Audit du graphe</button>
-        <button id="btn-counters" class="btn-wide">Vue par compteur</button>
-        <button id="btn-contracts" class="btn-wide">Vue par type de contrat</button>
-        <button id="btn-isolates" class="btn-wide">Lister les règles isolées</button>
-        <button id="btn-variables" class="btn-wide">Index des variables</button>
+        <button id="btn-audit-side" class="btn-wide" data-en="Graph audit">Audit du graphe</button>
+        <button id="btn-counters" class="btn-wide" data-en="View by counter">Vue par compteur</button>
+        <button id="btn-contracts" class="btn-wide" data-en="View by contract type">Vue par type de contrat</button>
+        <button id="btn-isolates" class="btn-wide" data-en="List isolated rules">Lister les règles isolées</button>
+        <button id="btn-variables" class="btn-wide" data-en="Variable index">Index des variables</button>
       </div>
-      <p class="smallnote">L'audit sépare ce qui cloche vraiment (références cassées, cycles, règles jamais affectées) de ce qui n'est qu'une mesure de complexité. Les deux vues se lisent comme une séquence de calcul et s'impriment directement.</p>
+      <p class="smallnote" data-en="The audit separates what is really wrong (broken references, cycles, rules never assigned) from what is only a measure of complexity. Both views read as a calculation sequence and print directly.">L'audit sépare ce qui cloche vraiment (références cassées, cycles, règles jamais affectées) de ce qui n'est qu'une mesure de complexité. Les deux vues se lisent comme une séquence de calcul et s'impriment directement.</p>
     </section>
     <section>
-      <h2>Mise en évidence</h2>
-      <label class="toggle"><input type="checkbox" id="toggle-ancestors" checked> Antécédents (amont)</label>
-      <label class="toggle"><input type="checkbox" id="toggle-descendants" checked> Descendants (aval)</label>
-      <p class="smallnote">Cliquez sur une règle pour afficher ses dépendances. Double‑clic pour effacer la sélection.</p>
+      <h2 data-en="Highlighting">Mise en évidence</h2>
+      <label class="toggle"><input type="checkbox" id="toggle-ancestors" checked> <span data-en="Ancestors (upstream)">Antécédents (amont)</span></label>
+      <label class="toggle"><input type="checkbox" id="toggle-descendants" checked> <span data-en="Descendants (downstream)">Descendants (aval)</span></label>
+      <p class="smallnote" data-en="Click a rule to show its dependencies. Double-click to clear the selection.">Cliquez sur une règle pour afficher ses dépendances. Double‑clic pour effacer la sélection.</p>
     </section>
   </aside>
 
   <div id="network">
     <div id="graph-canvas" style="position:absolute;inset:0"></div>
     <div class="graph-toolbar">
-      <button id="btn-audit" class="ghost" title="Audit du graphe : références cassées, cycles, règles jamais affectées, complexité">Audit du graphe</button>
-      <button id="btn-relayout" title="Recalcule la disposition une fois (puis fige)">Réorganiser</button>
-      <button id="btn-fit" title="Recadrer la vue">Recadrer</button>
-      <button id="btn-reset" title="Effacer la sélection et les filtres" class="ghost">Reset</button>
+      <button id="btn-audit" class="ghost" title="Audit du graphe : références cassées, cycles, règles jamais affectées, complexité" data-en-title="Graph audit: broken references, cycles, rules never assigned, complexity" data-en="Graph audit">Audit du graphe</button>
+      <button id="btn-relayout" title="Recalcule la disposition une fois (puis fige)" data-en-title="Recompute the layout once (then freeze it)" data-en="Re-layout">Réorganiser</button>
+      <button id="btn-fit" title="Recadrer la vue" data-en-title="Fit the view" data-en="Fit">Recadrer</button>
+      <button id="btn-reset" title="Effacer la sélection et les filtres" data-en-title="Clear the selection and filters" class="ghost">Reset</button>
     </div>
-    <div id="drop-overlay">Déposez un Excel (règles ou types de jour)</div>
+    <div id="drop-overlay" data-en="Drop an Excel file (rules or day types)">Déposez un Excel (règles ou types de jour)</div>
     <div id="load-error">
-      <div>⚠️ Échec du chargement de vis-network</div>
-      <div style="color:var(--muted);font-size:12px">Vérifiez votre connexion (les bibliothèques sont chargées depuis un CDN).</div>
+      <div data-en="⚠️ vis-network failed to load">⚠️ Échec du chargement de vis-network</div>
+      <div style="color:var(--muted);font-size:12px" data-en="Check your connection (the libraries are loaded from a CDN).">Vérifiez votre connexion (les bibliothèques sont chargées depuis un CDN).</div>
     </div>
     <div id="toasts"></div>
 
@@ -117,9 +122,9 @@
     <div id="welcome-overlay" hidden>
       <div class="welcome-card">
         <div class="welcome-brand" id="welcome-brand"></div>
-        <h2>Aucun environnement chargé</h2>
-        <p>Déposez les exports #Dièse du client depuis l'onglet <strong>Accueil</strong> : le graphe des règles apparaîtra ici.</p>
-        <button id="welcome-load" class="welcome-btn">Déposer des exports…</button>
+        <h2 data-en="No environment loaded">Aucun environnement chargé</h2>
+        <p data-en-html="Drop the client's #Dièse exports from the <strong>Home</strong> tab: the rule graph will appear here.">Déposez les exports #Dièse du client depuis l'onglet <strong>Accueil</strong> : le graphe des règles apparaîtra ici.</p>
+        <button id="welcome-load" class="welcome-btn" data-en="Drop exports…">Déposer des exports…</button>
       </div>
     </div>
   </div>
@@ -134,7 +139,7 @@
       <div class="an-head">
         <div><h2 id="an-title">Analyse</h2><div id="an-subtitle" class="an-sub"></div></div>
         <div class="an-print-brand" id="an-print-brand"></div>
-        <button id="an-close" class="ghost">Fermer</button>
+        <button id="an-close" class="ghost" data-en="Close">Fermer</button>
       </div>
       <div id="an-body" class="an-body"></div>
     </div>
@@ -145,33 +150,30 @@
     <section id="view-accueil" class="view" data-view="accueil">
       <div class="view-inner narrow">
         <div class="hero">
-          <h2>Un environnement, tous les outils GTA</h2>
-          <p>Déposez les exports #Dièse du client. L'Atelier les lit une seule fois et en tire le graphe des règles, l'audit, le catalogue en langage clair et le dossier de paramétrage à remettre au client.</p>
+          <h2 data-en="One environment, every GTA tool">Un environnement, tous les outils GTA</h2>
+          <p data-en="Drop the client's #Dièse exports. The Atelier reads them once and builds the rule graph, the audit, the plain-language catalogue and the configuration dossier to hand over to the client.">Déposez les exports #Dièse du client. L'Atelier les lit une seule fois et en tire le graphe des règles, l'audit, le catalogue en langage clair et le dossier de paramétrage à remettre au client.</p>
         </div>
-        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Déposer des exports">
-          <div class="dz-title">Déposez ici les exports, en vrac</div>
-          <div class="dz-sub">Règles GTA (obligatoire) · Types de jour (recommandé) · Référentiels : taux, fonctions, types d'activité…</div>
-          <div class="dz-sub">Chaque fichier est reconnu à ses colonnes, pas à son nom.</div>
+        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Déposer des exports" data-en-aria="Drop exports">
+          <div class="dz-title" data-en="Drop the exports here, all at once">Déposez ici les exports, en vrac</div>
+          <div class="dz-sub" data-en="GTA rules (required) · Day types (recommended) · Reference data: rates, jobs, activity types…">Règles GTA (obligatoire) · Types de jour (recommandé) · Référentiels : taux, fonctions, types d'activité…</div>
+          <div class="dz-sub" data-en="Each file is recognised by its columns, not by its name.">Chaque fichier est reconnu à ses colonnes, pas à son nom.</div>
         </div>
         <div id="engine-status" class="engine-status" aria-live="polite">Démarrage du moteur…</div>
         <ul id="file-list" class="file-list"></ul>
         <div id="env-summary" class="env-summary" hidden></div>
-        <p class="privacy">Tout s'exécute dans votre navigateur. Aucun fichier n'est envoyé à un serveur.</p>
+        <p class="privacy" data-en="Everything runs in your browser. No file is sent to a server.">Tout s'exécute dans votre navigateur. Aucun fichier n'est envoyé à un serveur.</p>
       </div>
     </section>
 
     <section id="view-catalogue" class="view" data-view="catalogue" hidden>
       <div class="view-toolbar">
-        <input id="cat-search" type="text" placeholder="Rechercher : libellé, #, code, texte…" aria-label="Rechercher une règle">
-        <select id="cat-contract" aria-label="Filtrer par type de contrat"><option value="">Tous les types de contrat</option></select>
-        <label class="toggle"><input type="checkbox" id="cat-counters"> Compteurs seulement</label>
-        <div class="seg" role="group" aria-label="Langue des descriptions">
-          <button data-lang="fr" aria-pressed="true">FR</button><button data-lang="en" aria-pressed="false">EN</button>
-        </div>
+        <input id="cat-search" type="text" placeholder="Rechercher : libellé, #, code, texte…" data-en-placeholder="Search: label, #, code, text…" aria-label="Rechercher une règle" data-en-aria="Search a rule">
+        <select id="cat-contract" aria-label="Filtrer par type de contrat" data-en-aria="Filter by contract type"><option value="">Tous les types de contrat</option></select>
+        <label class="toggle"><input type="checkbox" id="cat-counters"> <span data-en="Counters only">Compteurs seulement</span></label>
         <span id="cat-count" class="muted"></span>
       </div>
       <div class="table-wrap"><table id="cat-table" class="grid">
-        <thead><tr><th class="c">Ordre</th><th class="c">#</th><th>Libellé</th><th>Libellé court</th><th>Code</th><th>Ce que fait la règle</th><th class="c">Compteur</th><th>Période</th><th class="c">Contrats</th></tr></thead>
+        <thead><tr><th class="c" data-en="Order">Ordre</th><th class="c">#</th><th data-en="Name">Libellé</th><th data-en="Short label">Libellé court</th><th>Code</th><th data-en="What the rule calculates">Ce que fait la règle</th><th class="c" data-en="Counter">Compteur</th><th data-en="Period">Période</th><th class="c" data-en="Contracts">Contrats</th></tr></thead>
         <tbody></tbody>
       </table></div>
     </section>
@@ -179,29 +181,29 @@
     <section id="view-audit" class="view" data-view="audit" hidden>
       <div class="view-inner">
         <div id="audit-body"></div>
-        <h3 class="subhead">Analyses du graphe</h3>
-        <p class="muted">Les vues détaillées de l'ancien Cartographe restent disponibles.</p>
+        <h3 class="subhead" data-en="Graph analyses">Analyses du graphe</h3>
+        <p class="muted" data-en="The detailed views of the former Cartographe remain available.">Les vues détaillées de l'ancien Cartographe restent disponibles.</p>
         <div class="btn-row">
-          <button data-analyse="audit">Audit du graphe</button>
-          <button data-analyse="counters">Vue par compteur</button>
-          <button data-analyse="contracts">Vue par type de contrat</button>
-          <button data-analyse="isolates">Règles isolées</button>
-          <button data-analyse="variables">Index des variables</button>
+          <button data-analyse="audit" data-en="Graph audit">Audit du graphe</button>
+          <button data-analyse="counters" data-en="View by counter">Vue par compteur</button>
+          <button data-analyse="contracts" data-en="View by contract type">Vue par type de contrat</button>
+          <button data-analyse="isolates" data-en="Isolated rules">Règles isolées</button>
+          <button data-analyse="variables" data-en="Variable index">Index des variables</button>
         </div>
       </div>
     </section>
 
     <section id="view-dossier" class="view" data-view="dossier" hidden>
       <div class="view-inner narrow">
-        <h2>Dossier de paramétrage</h2>
-        <p class="muted">Le classeur Excel remis au client : un Lisez-moi, le catalogue des règles dans leur ordre d'exécution avec une explication en langage clair, et le lexique des types de jour.</p>
+        <h2 data-en="Configuration dossier">Dossier de paramétrage</h2>
+        <p class="muted" data-en="The Excel workbook handed over to the client: a Read me, the catalogue of rules in execution order with a plain-language explanation, and the day type glossary.">Le classeur Excel remis au client : un Lisez-moi, le catalogue des règles dans leur ordre d'exécution avec une explication en langage clair, et le lexique des types de jour.</p>
         <form id="dossier-form" class="form">
-          <label>Nom du client<input id="d-client" class="field" type="text" placeholder="Opéra de …" autocomplete="off"></label>
-          <label>Langue du dossier
-            <select id="d-langue"><option value="fr">Français</option><option value="en">Anglais</option></select>
+          <label><span data-en="Client name">Nom du client</span><input id="d-client" class="field" type="text" placeholder="Opéra de …" autocomplete="off"></label>
+          <label><span data-en="Dossier language">Langue du dossier</span>
+            <select id="d-langue"><option value="fr" data-en="French">Français</option><option value="en" data-en="English">Anglais</option></select>
           </label>
-          <label class="toggle"><input type="checkbox" id="d-contrats" checked> Une colonne par type de contrat</label>
-          <button type="submit" class="primary" id="d-generate">Télécharger le dossier (.xlsx)</button>
+          <label class="toggle"><input type="checkbox" id="d-contrats" checked> <span data-en="One column per contract type">Une colonne par type de contrat</span></label>
+          <button type="submit" class="primary" id="d-generate" data-en="Download the dossier (.xlsx)">Télécharger le dossier (.xlsx)</button>
         </form>
         <div id="dossier-refs"></div>
         <div id="dossier-status" class="engine-status" aria-live="polite"></div>
@@ -210,11 +212,13 @@
   </main>
 </div>
 
-<div id="global-drop" class="global-drop">Déposez les exports pour les ajouter à l'environnement</div>
+<div id="global-drop" class="global-drop" data-en="Drop the exports to add them to the environment">Déposez les exports pour les ajouter à l'environnement</div>
 
+<script src="app/i18n.js"></script>
 <script src="app/engine.js"></script>
 <script src="app/explorer/01-donnees.js"></script>
 <script src="app/explorer/02-constantes.js"></script>
+<script src="app/explorer/02b-constantes-en.js"></script>
 <script src="app/explorer/03-refs-cassees.js"></script>
 <script src="app/explorer/04-optimisations.js"></script>
 <script src="app/explorer/05-analyse-formules.js"></script>

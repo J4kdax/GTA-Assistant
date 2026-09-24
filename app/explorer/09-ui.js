@@ -38,7 +38,7 @@ const UI = {
     const count = STATE.dayTypes.size;
     document.getElementById('dt-count').textContent = count;
     if (!count) {
-      status.textContent = 'Aucun référentiel chargé';
+      status.textContent = L('Aucun référentiel chargé', 'No reference data loaded');
       status.classList.remove('ok');
       grid.innerHTML = '';
       return;
@@ -46,7 +46,7 @@ const UI = {
     // Used in current rule set?
     const used = new Set();
     for (const r of STATE.rules) for (const id of (r.dtRefs || [])) used.add(id);
-    status.innerHTML = `<span class="ok">✔</span> ${count} types de jour · <span style="color:var(--muted)">${used.size} référencés par les règles</span>`;
+    status.innerHTML = `<span class="ok">✔</span> ${Ln(count, 'type de jour', 'types de jour', 'day type', 'day types')} · <span style="color:var(--muted)">${L(`${used.size} référencés par les règles`, `${used.size} used by rules`)}</span>`;
     status.classList.add('ok');
     const list = [...STATE.dayTypes.values()]
       .sort((a,b)=>(a.ordre||999)-(b.ordre||999) || a.id-b.id);
@@ -61,14 +61,14 @@ const UI = {
     const cat = CAT_CLASS[dt.categorie] || '';
     const op = used ? '1' : '.45';
     const tooltip = `${dt.libelle || ''}${dt.libelle_interne && dt.libelle_interne !== dt.libelle ? ' / '+dt.libelle_interne : ''} — ${dt.categorie || ''}` +
-                    `\nCliquez pour mettre en évidence les règles qui l'utilisent`;
+                    '\n' + L("Cliquez pour mettre en évidence les règles qui l'utilisent", 'Click to highlight the rules that use it');
     return `<span class="dt-chip ${cat}" data-dt="${dt.id}" style="background:${dt.hex_bg};color:${dt.hex_fg};opacity:${op}" title="${escapeAttr(tooltip)}">
       <span class="num">#${dt.id}</span><span class="dt-name">${richText(dt.libelle_court || dt.libelle || '')}</span>
     </span>`;
   },
 
   unknownDayTypeChipHTML(id) {
-    return `<span class="dt-chip unknown" data-dt="${id}" title="Type de jour #${id} — non trouvé dans le référentiel"><span class="num">#${id}</span><span class="dt-name">?</span></span>`;
+    return `<span class="dt-chip unknown" data-dt="${id}" title="${L('Type de jour', 'Day type')} #${id} — ${L('non trouvé dans le référentiel', 'not found in the reference data')}"><span class="num">#${id}</span><span class="dt-name">?</span></span>`;
   },
 
   // Sélection d'un type de jour : met en évidence toutes les règles
@@ -211,7 +211,7 @@ const UI = {
   renderDetail(r) {
     const root = document.getElementById('detail');
     if (!r) {
-      root.innerHTML = '<div class="placeholder">Cliquez sur une règle pour voir ses détails</div>';
+      root.innerHTML = `<div class="placeholder">${L('Cliquez sur une règle pour voir ses détails', 'Click a rule to see its details')}</div>`;
       return;
     }
     const color = STATE.typeColor.get(r.rule_type) || '#888';
@@ -224,20 +224,20 @@ const UI = {
     const paramsHtml = UI.formatParams(r.parametres, r.id);
     const depsHtml = (r.deps||[]).length
       ? r.deps.map(d => `<a data-jump="${d}">#${d} ${richText((STATE.byId.get(d)||{}).libelle_court || '')}</a>`).join('')
-      : '<span class="empty">Aucune dépendance amont</span>';
+      : `<span class="empty">${L('Aucune dépendance amont', 'No upstream dependency')}</span>`;
     const rdepsHtml = (r.rdeps||[]).length
       ? r.rdeps.map(d => `<a data-jump="${d}">#${d} ${richText((STATE.byId.get(d)||{}).libelle_court || '')}</a>`).join('')
-      : '<span class="empty">Aucune dépendance aval</span>';
+      : `<span class="empty">${L('Aucune dépendance aval', 'No downstream dependency')}</span>`;
     // Lecture humaine du rule_type
     // Pour les règles _039_STD_GTA_Formula, on essaie d'analyser dynamiquement
     // la formule pour produire une description spécifique à cette règle.
-    const doc = RULE_TYPE_DOC[r.rule_type];
+    const doc = (I18N.lang === 'en' && RULE_TYPE_DOC_EN[r.rule_type]) || RULE_TYPE_DOC[r.rule_type];
     const spec = (typeof RULE_SPECS !== 'undefined') ? RULE_SPECS[r.rule_type] : null;
     // Lien KB officiel + description anglaise du PHPDoc, à afficher en bas du bloc rt-doc
     const kbBtn = (spec && spec.kb_link)
-      ? `<a class="rt-doc-kb" href="${escapeAttr(spec.kb_link)}" target="_blank" rel="noopener" title="Documentation officielle #Dièse">Doc #Dièse ↗</a>`
+      ? `<a class="rt-doc-kb" href="${escapeAttr(spec.kb_link)}" target="_blank" rel="noopener" title="${L('Documentation officielle #Dièse', 'Official #Dièse documentation')}">Doc #Dièse ↗</a>`
       : '';
-    const enDesc = (spec && spec.description_en)
+    const enDesc = (spec && spec.description_en && I18N.lang !== 'en')
       ? `<div class="rt-doc-en">${escapeHtml(spec.description_en)}</div>`
       : '';
     let docHtml;
@@ -247,15 +247,15 @@ const UI = {
       if (interp) {
         docHtml = `<div class="rt-doc">
           ${kbBtn}
-          <div class="rt-doc-title">Que fait cette formule ?</div>
+          <div class="rt-doc-title">${L('Que fait cette formule ?', 'What does this formula do?')}</div>
           <div class="rt-doc-desc">${escapeHtml(interp)}</div>
           ${enDesc}
-          <div class="rt-doc-foot">${escapeHtml(doc ? doc.title : 'Formule de calcul')} · analyse statique</div>
+          <div class="rt-doc-foot">${escapeHtml(doc ? doc.title : L('Formule de calcul', 'Calculation formula'))} · ${L('analyse statique', 'static analysis')}</div>
         </div>`;
       } else {
         docHtml = `<div class="rt-doc" style="border-left-color:var(--muted-2);background:var(--panel-2)">
           ${kbBtn}
-          <div class="rt-doc-desc" style="color:var(--muted)">Formule trop imbriquée pour une lecture automatique fiable — reportez-vous au bloc « Paramètres » ci-dessous.</div>
+          <div class="rt-doc-desc" style="color:var(--muted)">${L('Formule trop imbriquée pour une lecture automatique fiable — reportez-vous au bloc « Paramètres » ci-dessous.', 'Formula too nested for a reliable automatic reading — see the “Settings” block below.')}</div>
         </div>`;
       }
     }
@@ -264,57 +264,57 @@ const UI = {
         docHtml = `<div class="rt-doc">${kbBtn}<div class="rt-doc-title">${escapeHtml(doc.title)}</div><div class="rt-doc-desc">${escapeHtml(doc.desc)}</div>${enDesc}</div>`;
       } else if (spec && (spec.description_en || spec.kb_link)) {
         // Pas dans RULE_TYPE_DOC mais on a une spec officielle : on l'utilise
-        docHtml = `<div class="rt-doc">${kbBtn}<div class="rt-doc-title">${escapeHtml(r.rule_type)}</div>${enDesc || `<div class="rt-doc-desc">Description française non disponible pour ce type ; voir la doc officielle.</div>`}</div>`;
+        docHtml = `<div class="rt-doc">${kbBtn}<div class="rt-doc-title">${escapeHtml(r.rule_type)}</div>${I18N.lang === 'en' && spec.description_en ? `<div class="rt-doc-desc">${escapeHtml(spec.description_en)}</div>` : (enDesc || `<div class="rt-doc-desc">${L('Description française non disponible pour ce type ; voir la doc officielle.', 'No description available for this type; see the official documentation.')}</div>`)}</div>`;
       } else {
-        docHtml = `<div class="rt-doc" style="border-left-color:var(--muted-2)"><div class="rt-doc-title" style="color:var(--muted-2)">Type non documenté</div><div class="rt-doc-desc">${escapeHtml(r.rule_type || '')} — type sans entrée dans RULE_TYPE_DOC ni dans les sources PHP.</div></div>`;
+        docHtml = `<div class="rt-doc" style="border-left-color:var(--muted-2)"><div class="rt-doc-title" style="color:var(--muted-2)">${L('Type non documenté', 'Undocumented type')}</div><div class="rt-doc-desc">${escapeHtml(r.rule_type || '')} — ${L('type sans entrée dans RULE_TYPE_DOC ni dans les sources PHP.', 'type with no entry in RULE_TYPE_DOC nor in the PHP sources.')}</div></div>`;
       }
     }
     // Ce que fait la règle, en clair : même phrase que dans le dossier client.
     if (r.description && r.description.fr) {
-      const lang = (typeof Shell !== 'undefined' && Shell.lang) || 'fr';
+      const lang = I18N.lang;
       const txt = r.description[lang] || r.description.fr;
       docHtml = `<div class="rt-human">
-          <div class="rt-doc-title">Ce que fait la règle</div>
+          <div class="rt-doc-title">${L('Ce que fait la règle', 'What the rule calculates')}</div>
           <div class="rt-human-desc">${escapeHtml(txt)}</div>
-          ${r.repli ? '<div class="rt-human-note">Type de règle sans traduction dédiée : paramétrage restitué tel quel.</div>' : ''}
+          ${r.repli ? `<div class="rt-human-note">${L('Type de règle sans traduction dédiée : paramétrage restitué tel quel.', 'Rule type without a dedicated translation: settings shown as they are.')}</div>` : ''}
         </div>` + docHtml;
     }
     root.innerHTML = `
-      <button id="btn-export-rule" class="export-rule-btn" title="Exporter cette règle en PDF (ouverture nouvelle fenêtre + impression)">📄 Exporter</button>
+      <button id="btn-export-rule" class="export-rule-btn" title="${L('Exporter cette règle en PDF (ouverture nouvelle fenêtre + impression)', 'Export this rule to PDF (opens a new window and prints)')}">📄 ${L('Exporter', 'Export')}</button>
       <h3 style="border-left:3px solid ${color};padding-left:8px">${richText(r.libelle || '')}</h3>
       <div class="rid">
         <span class="pill">#${r.id}</span>
         <span class="pill">${escapeHtml(r.rule_type || '')}</span>
         ${r.code ? `<span class="pill">code: ${escapeHtml(r.code)}</span>` : ''}
         ${(() => { const o = Analyse.effOrder(r); return o.value === null ? '' :
-            `<span class="pill" title="Ordre d'évaluation effectif : « SA : Ordre technique » s'il diffère de zéro, sinon la colonne « Ordre ». Ici : ${o.source === 'technique' ? 'ordre technique' : 'colonne Ordre'}.">ordre ${o.value}${o.source === 'technique' ? ' tech.' : ''}</span>`; })()}
-        ${r.compteur ? '<span class="pill" style="background:var(--ok-soft);color:var(--ok)">compteur</span>':''}
+            `<span class="pill" title="${L(`Ordre d'évaluation effectif : « SA : Ordre technique » s'il diffère de zéro, sinon la colonne « Ordre ». Ici : ${o.source === 'technique' ? 'ordre technique' : 'colonne Ordre'}.`, `Effective evaluation order: “SA: Technical order” when it is not zero, otherwise the “Order” column. Here: ${o.source === 'technique' ? 'technical order' : 'Order column'}.`)}">${L('ordre', 'order')} ${o.value}${o.source === 'technique' ? ' tech.' : ''}</span>`; })()}
+        ${r.compteur ? `<span class="pill" style="background:var(--ok-soft);color:var(--ok)">${L('compteur', 'counter')}</span>`:''}
       </div>
       ${docHtml}
       <div class="field">
-        <div class="field-label">Période</div>
+        <div class="field-label">${L('Période', 'Period')}</div>
         <div>${escapeHtml(r.periode || '—')}</div>
       </div>
       <div class="field">
-        <div class="field-label">Paramètres</div>
+        <div class="field-label">${L('Paramètres', 'Settings')}</div>
         <div class="params">${paramsHtml || '<span class="empty">—</span>'}</div>
         ${(spec && spec.params && spec.params.length) ? `
           <details class="spec-params" style="margin-top:6px">
-            <summary>Paramètres officiels attendus (depuis le source #Dièse, ${spec.params.length})</summary>
+            <summary>${L('Paramètres officiels attendus (depuis le source #Dièse', 'Official expected settings (from the #Dièse source')}, ${spec.params.length})</summary>
             <div class="spec-params-list">${spec.params.map(p => `<div class="spec-param-item${p.mandatory ? ' mand' : ''}"><span class="spec-param-label">${escapeHtml(p.label)}${p.mandatory ? ' <span class="spec-mand">*</span>' : ''}</span><span class="spec-param-type">${escapeHtml(p.editor || '?')}</span></div>`).join('')}</div>
           </details>` : ''}
       </div>
       <div class="field deps">
-        <div class="field-label">Dépend de (amont)</div>
+        <div class="field-label">${L('Dépend de (amont)', 'Depends on (upstream)')}</div>
         ${depsHtml}
       </div>
       <div class="field rdeps">
-        <div class="field-label">Utilisé par (aval)</div>
+        <div class="field-label">${L('Utilisé par (aval)', 'Used by (downstream)')}</div>
         ${rdepsHtml}
-        <button id="btn-chain" class="chain-btn" title="Dépendances sur plusieurs niveaux, amont et aval">Voir la chaîne de calcul complète</button>
+        <button id="btn-chain" class="chain-btn" title="${L('Dépendances sur plusieurs niveaux, amont et aval', 'Dependencies over several levels, upstream and downstream')}">${L('Voir la chaîne de calcul complète', 'See the full calculation chain')}</button>
       </div>
       <details class="field" open>
-        <summary class="field-label">Affectations <span class="hint">types de contrats rattachés</span></summary>
+        <summary class="field-label">${L('Affectations', 'Assignments')} <span class="hint">${L('types de contrats rattachés', 'contract types attached')}</span></summary>
         <div class="affect-list">${affHtml || '<span class="empty">—</span>'}</div>
       </details>
 `;
@@ -338,27 +338,27 @@ const UI = {
   renderDayTypeDetail(dt, fallbackId) {
     const root = document.getElementById('detail');
     if (!dt) {
-      root.innerHTML = `<h3>Type de jour #${fallbackId}</h3>
-        <div class="rid"><span class="pill" style="background:var(--err-soft);color:var(--err)">non résolu</span></div>
-        <div class="smallnote">Ce type de jour est référencé par au moins une règle mais n'est pas présent dans le référentiel chargé. Essayez de charger l'export Excel "Contrats-GTA-Absences-présences" via le bouton dédié.</div>`;
+      root.innerHTML = `<h3>${L('Type de jour', 'Day type')} #${fallbackId}</h3>
+        <div class="rid"><span class="pill" style="background:var(--err-soft);color:var(--err)">${L('non résolu', 'unresolved')}</span></div>
+        <div class="smallnote">${L("Ce type de jour est référencé par au moins une règle mais n'est pas présent dans le référentiel chargé. Déposez l'export Excel « Contrats-GTA-Absences-présences » dans l'Atelier.", 'This day type is used by at least one rule but is not in the loaded reference data. Drop the “Contrats-GTA-Absences-présences” Excel export into the Atelier.')}</div>`;
       return;
     }
     // Liste des règles qui consomment ce type de jour
     const consumers = STATE.rules.filter(r => (r.dtRefs||[]).includes(dt.id));
     const consHtml = consumers.length
       ? consumers.slice().sort((a,b)=>a.id-b.id).map(r => `<a data-jump="${r.id}">#${r.id} ${richText(r.libelle_court || r.libelle || '')}</a>`).join('')
-      : '<span class="empty">Aucune règle ne référence ce type de jour</span>';
+      : `<span class="empty">${L('Aucune règle ne référence ce type de jour', 'No rule uses this day type')}</span>`;
     root.innerHTML = `
       <h3 style="border-left:6px solid ${dt.hex_bg};padding-left:8px">${richText(dt.libelle || '')}</h3>
       <div class="rid">
-        <span class="pill">type de jour #${dt.id}</span>
+        <span class="pill">${L('type de jour', 'day type')} #${dt.id}</span>
         <span class="pill" style="background:${dt.hex_bg};color:${dt.hex_fg};border-color:transparent">${richText(dt.libelle_court || '')}</span>
-        ${dt.actif ? '<span class="pill" style="background:var(--ok-soft);color:var(--ok)">actif</span>' : '<span class="pill" style="opacity:.6">inactif</span>'}
+        ${dt.actif ? `<span class="pill" style="background:var(--ok-soft);color:var(--ok)">${L('actif', 'active')}</span>` : `<span class="pill" style="opacity:.6">${L('inactif', 'inactive')}</span>`}
       </div>
-      <div class="field"><div class="field-label">Catégorie</div><div>${escapeHtml(dt.categorie || '—')}</div></div>
-      <div class="field"><div class="field-label">Libellé interne</div><div>${escapeHtml(dt.libelle_interne || dt.libelle || '—')}</div></div>
-      <div class="field"><div class="field-label">Durée par défaut</div><div>${dt.duree_min != null ? dt.duree_min+' min' : '—'}</div></div>
-      <div class="field deps"><div class="field-label">Règles qui le référencent <span class="hint">(${consumers.length})</span></div>${consHtml}</div>
+      <div class="field"><div class="field-label">${L('Catégorie', 'Category')}</div><div>${escapeHtml(dt.categorie || '—')}</div></div>
+      <div class="field"><div class="field-label">${L('Libellé interne', 'Internal label')}</div><div>${escapeHtml(dt.libelle_interne || dt.libelle || '—')}</div></div>
+      <div class="field"><div class="field-label">${L('Durée par défaut', 'Default duration')}</div><div>${dt.duree_min != null ? dt.duree_min+' min' : '—'}</div></div>
+      <div class="field deps"><div class="field-label">${L('Règles qui le référencent', 'Rules that use it')} <span class="hint">(${consumers.length})</span></div>${consHtml}</div>
     `;
     root.querySelectorAll('a[data-jump]').forEach(a => {
       a.addEventListener('click', () => UI.jumpTo(parseInt(a.dataset.jump,10)));
@@ -386,7 +386,7 @@ const UI = {
       }
       // Renomme les clés "_NNN_STD_..._Formula" en "Formule"
       if (/^_\d+_.*Formula/i.test(label)) {
-        return { label: 'Formule', sub: label };
+        return { label: L('Formule', 'Formula'), sub: label };
       }
       return { label, sub };
     };
@@ -396,7 +396,7 @@ const UI = {
       let s = escaped.replace(/rule(\d+)/g, (mm, n) => {
         const nid = parseInt(n, 10);
         const dead = !ids.has(nid);
-        return `<a class="ruleref ${dead?'dead':''}" data-rule="${nid}" title="${dead?'Référence cassée: rule'+nid+' inexistant':'Aller à la règle #'+nid}">rule${n}</a>`;
+        return `<a class="ruleref ${dead?'dead':''}" data-rule="${nid}" title="${dead?L('Référence cassée : rule'+nid+' inexistant', 'Broken reference: rule'+nid+' does not exist'):L('Aller à la règle #', 'Go to rule #')+nid}">rule${n}</a>`;
       });
       // htimeN -> chip type de jour
       s = s.replace(/htime(\d+)/g, (mm, n) => {
@@ -404,10 +404,10 @@ const UI = {
         const dt = STATE.dayTypes.get(nid);
         if (dt) {
           const cat = CAT_CLASS[dt.categorie] || '';
-          const tip = `htime${nid} → ${plainText(dt.libelle)}${dt.categorie?' ('+dt.categorie+')':''}\nCliquez pour mettre en évidence les règles qui l'utilisent`;
+          const tip = `htime${nid} → ${plainText(dt.libelle)}${dt.categorie?' ('+dt.categorie+')':''}\n${L("Cliquez pour mettre en évidence les règles qui l'utilisent", 'Click to highlight the rules that use it')}`;
           return `<span class="dt-chip dt-inline ${cat}" data-dt="${nid}" style="background:${dt.hex_bg};color:${dt.hex_fg}" title="${escapeAttr(tip)}">htime<span class="num">${nid}</span></span>`;
         }
-        return `<span class="dt-chip dt-inline unknown" data-dt="${nid}" title="htime${nid} — type de jour absent du référentiel">htime${nid}</span>`;
+        return `<span class="dt-chip dt-inline unknown" data-dt="${nid}" title="htime${nid} — ${L('type de jour absent du référentiel', 'day type missing from the reference data')}">htime${nid}</span>`;
       });
       return s;
     };
@@ -444,7 +444,7 @@ const UI = {
         const rows = decodeThresholds(rawVal);
         if (rows.length) {
           const trs = rows.map(r => `<tr><td>${r.from}</td><td>${r.to}</td><td class="tval">${r.value}</td></tr>`).join('');
-          const tbl = `<table class="thresh"><thead><tr><th>de</th><th>à</th><th>valeur</th></tr></thead><tbody>${trs}</tbody></table>`;
+          const tbl = `<table class="thresh"><thead><tr><th>${L('de', 'from')}</th><th>${L('à', 'to')}</th><th>${L('valeur', 'value')}</th></tr></thead><tbody>${trs}</tbody></table>`;
           return `<div class="pline">${keyHtml}<div class="pval">${tbl}</div></div>`;
         }
       }
@@ -464,7 +464,7 @@ const UI = {
 
   jumpTo(ruleId) {
     if (!STATE.byId.get(ruleId)) {
-      toast('Règle #'+ruleId+' introuvable', 'warn');
+      toast(L('Règle #', 'Rule #')+ruleId+L(' introuvable', ' not found'), 'warn');
       return;
     }
     STATE.selected = ruleId;
@@ -513,7 +513,7 @@ const UI = {
     }
     scored.sort((a, b) => a.rank - b.rank || a.r.id - b.r.id);
     const matches = scored.slice(0, 30).map(s => s.r);
-    if (!matches.length) { root.innerHTML = '<div class="placeholder" style="padding:8px">Aucun résultat</div>'; return; }
+    if (!matches.length) { root.innerHTML = `<div class="placeholder" style="padding:8px">${L('Aucun résultat', 'No result')}</div>`; return; }
     root.innerHTML = matches.map(r => {
       let ctx = '';
       if (r.parametres) {
@@ -575,17 +575,17 @@ const UI = {
       if (!src || !dt) return;
       const root = document.getElementById('detail');
       root.innerHTML = `
-        <h3 style="border-left:3px solid #5d6675;padding-left:8px">Lien règle → type de jour</h3>
+        <h3 style="border-left:3px solid #5d6675;padding-left:8px">${L('Lien règle → type de jour', 'Rule → day type link')}</h3>
         <div class="rid">
-          <span class="pill">arête</span>
-          <span class="pill" style="background:rgba(93,102,117,.2);border-color:#5d6675">consommation type de jour</span>
+          <span class="pill">${L('arête', 'edge')}</span>
+          <span class="pill" style="background:rgba(93,102,117,.2);border-color:#5d6675">${L('consommation type de jour', 'day type use')}</span>
         </div>
         <div class="field">
-          <div class="field-label">Règle consommatrice</div>
+          <div class="field-label">${L('Règle consommatrice', 'Consuming rule')}</div>
           <div><a data-jump="${src.id}">#${src.id} ${richText(src.libelle_court || src.libelle || '')}</a> · <span style="color:var(--muted-2);font-size:11px">${escapeHtml(src.rule_type || '')}</span></div>
         </div>
         <div class="field">
-          <div class="field-label">Type de jour référencé</div>
+          <div class="field-label">${L('Type de jour référencé', 'Day type used')}</div>
           <div><span class="dt-chip" data-dt="${dt.id}" style="background:${dt.hex_bg};color:${dt.hex_fg}"><span class="num">#${dt.id}</span>${richText(dt.libelle_court || dt.libelle || '')}</span></div>
           <div class="smallnote">${escapeHtml(dt.categorie || '')}</div>
         </div>`;
@@ -623,54 +623,54 @@ const UI = {
     const findingHtml = findings.length ? findings.map(f => {
       if (f.type === 'inline') {
         return `<div class="edge-finding">
-          <div class="ef-type">Inline dans formule</div>
+          <div class="ef-type">${L('Inline dans formule', 'Inline in formula')}</div>
           <div class="ef-key">${escapeHtml(f.key)}</div>
           <div class="ef-line"><code>${escapeHtml(f.line)}</code></div>
-          <div class="smallnote">${f.count} occurrence${f.count>1?'s':''} de <code>rule${srcId}</code> dans cette ligne.</div>
+          <div class="smallnote">${L(`${f.count} occurrence${f.count>1?'s':''} de <code>rule${srcId}</code> dans cette ligne.`, `${f.count} occurrence${f.count>1?'s':''} of <code>rule${srcId}</code> in this line.`)}</div>
         </div>`;
       } else {
         return `<div class="edge-finding">
-          <div class="ef-type">Paramètre dédié</div>
+          <div class="ef-type">${L('Paramètre dédié', 'Dedicated setting')}</div>
           <div class="ef-key">${escapeHtml(f.key)}</div>
-          <div class="ef-line">Valeur : <code>${escapeHtml(f.val)}</code></div>
-          <div class="smallnote">Référence #${srcId} déclarée explicitement comme entrée de ce paramètre.</div>
+          <div class="ef-line">${L('Valeur : ', 'Value: ')}<code>${escapeHtml(f.val)}</code></div>
+          <div class="smallnote">${L(`Référence #${srcId} déclarée explicitement comme entrée de ce paramètre.`, `Reference #${srcId} explicitly declared as an input of this setting.`)}</div>
         </div>`;
       }
-    }).join('') : '<span class="empty">Aucun référencement direct détecté — l\\u00a0lien pourrait être indirect ou via un sous-paramètre non analysé.</span>';
+    }).join('') : `<span class="empty">${L('Aucun référencement direct détecté — le lien pourrait être indirect ou via un sous-paramètre non analysé.', 'No direct reference found — the link may be indirect or through a sub-setting that is not analysed.')}</span>`;
     const coRefsList = [...coRefs].sort((a,b)=>a-b);
     root.innerHTML = `
-      <h3 style="border-left:3px solid var(--accent);padding-left:8px">Lien de dépendance</h3>
+      <h3 style="border-left:3px solid var(--accent);padding-left:8px">${L('Lien de dépendance', 'Dependency link')}</h3>
       <div class="rid">
-        <span class="pill">arête</span>
-        <span class="pill">source → consommateur</span>
+        <span class="pill">${L('arête', 'edge')}</span>
+        <span class="pill">${L('source → consommateur', 'source → consumer')}</span>
       </div>
       <div class="field edge-endpoints">
-        <div class="field-label">Règle source <span class="hint">(produit la valeur)</span></div>
+        <div class="field-label">${L('Règle source', 'Source rule')} <span class="hint">${L('(produit la valeur)', '(produces the value)')}</span></div>
         <div class="edge-rule" style="border-left:3px solid ${srcColor}">
           <a data-jump="${src.id}"><strong>#${src.id} ${richText(src.libelle_court || src.libelle || '')}</strong></a>
-          <div class="smallnote">${escapeHtml(src.rule_type || '')}${src.compteur ? ' · compteur' : ''}</div>
+          <div class="smallnote">${escapeHtml(src.rule_type || '')}${src.compteur ? ' · ' + L('compteur', 'counter') : ''}</div>
         </div>
       </div>
       <div class="field edge-endpoints">
-        <div class="field-label">Règle consommatrice <span class="hint">(utilise la valeur)</span></div>
+        <div class="field-label">${L('Règle consommatrice', 'Consuming rule')} <span class="hint">${L('(utilise la valeur)', '(uses the value)')}</span></div>
         <div class="edge-rule" style="border-left:3px solid ${dstColor}">
           <a data-jump="${dst.id}"><strong>#${dst.id} ${richText(dst.libelle_court || dst.libelle || '')}</strong></a>
-          <div class="smallnote">${escapeHtml(dst.rule_type || '')}${dst.compteur ? ' · compteur' : ''}</div>
+          <div class="smallnote">${escapeHtml(dst.rule_type || '')}${dst.compteur ? ' · ' + L('compteur', 'counter') : ''}</div>
         </div>
       </div>
       <div class="field">
-        <div class="field-label">Mode de référencement</div>
+        <div class="field-label">${L('Mode de référencement', 'How it is referenced')}</div>
         <div class="edge-findings">${findingHtml}</div>
       </div>
       ${coRefsList.length ? `<div class="field">
-        <div class="field-label">Co-références <span class="hint">(autres règles consommées dans le même paramètre)</span></div>
+        <div class="field-label">${L('Co-références', 'Co-references')} <span class="hint">${L('(autres règles consommées dans le même paramètre)', '(other rules used in the same setting)')}</span></div>
         <div class="deps">${coRefsList.map(id => {
           const r = STATE.byId.get(id);
           return `<a data-jump="${id}">#${id} ${richText(r ? (r.libelle_court || r.libelle || '') : '')}</a>`;
         }).join('')}</div>
       </div>` : ''}
       <div class="field">
-        <div class="field-label">Paramètres complets de la règle consommatrice</div>
+        <div class="field-label">${L('Paramètres complets de la règle consommatrice', 'Full settings of the consuming rule')}</div>
         <div class="params">${UI.formatParams(dst.parametres, dst.id) || '<span class="empty">—</span>'}</div>
       </div>`;
     root.querySelectorAll('a[data-jump]').forEach(a => a.addEventListener('click', () => UI.jumpTo(parseInt(a.dataset.jump,10))));
@@ -687,7 +687,7 @@ const UI = {
     const html = UI.buildPrintableHTML(r);
     const win = window.open('', '_blank');
     if (!win) {
-      toast('Le navigateur a bloqué la nouvelle fenêtre. Autorise les pop-ups pour ce site.', 'err');
+      toast(L('Le navigateur a bloqué la nouvelle fenêtre. Autorise les pop-ups pour ce site.', 'The browser blocked the new window. Allow pop-ups for this site.'), 'err');
       return;
     }
     win.document.open();
@@ -700,11 +700,13 @@ const UI = {
   buildPrintableHTML(r) {
     const esc = (s) => String(s == null ? '' : s)
       .replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-    const doc = RULE_TYPE_DOC[r.rule_type];
+    const doc = (I18N.lang === 'en' && RULE_TYPE_DOC_EN[r.rule_type]) || RULE_TYPE_DOC[r.rule_type];
     const spec = (typeof RULE_SPECS !== 'undefined') ? RULE_SPECS[r.rule_type] : null;
-    const interp = (r.rule_type === '_039_STD_GTA_Formula' && typeof FormulaAnalyzer !== 'undefined')
+    // Phrase du moteur (celle du dossier client) ; à défaut, l'analyse statique historique.
+    const human = r.description ? (r.description[I18N.lang] || r.description.fr) : null;
+    const interp = human || ((r.rule_type === '_039_STD_GTA_Formula' && typeof FormulaAnalyzer !== 'undefined')
       ? FormulaAnalyzer.interpret(r, STATE.byId, STATE.dayTypes)
-      : null;
+      : null);
     const typeColor = STATE.typeColor.get(r.rule_type) || '#888';
     const affectations = (r.affectations ? String(r.affectations).split('\n').map(line => {
       const m = line.match(/(.+?)\s*\(#(\d+)\)/);
@@ -713,18 +715,18 @@ const UI = {
     }).filter(Boolean) : []);
     const resolveDeps = (ids) => (ids || []).map(id => {
       const dep = STATE.byId.get(id);
-      return { id, lib: dep ? richText(dep.libelle_court || dep.libelle || '') : '(absente)' };
+      return { id, lib: dep ? richText(dep.libelle_court || dep.libelle || '') : L('(absente)', '(missing)') };
     });
     const deps = resolveDeps(r.deps);
     const rdeps = resolveDeps(r.rdeps);
     const paramsBlocks = UI.buildExportParams(r.parametres);
-    const generatedAt = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
-    const titleStr = `Règle #${r.id} — ${plainText(r.libelle_court || r.libelle || '')}`;
+    const generatedAt = new Date().toLocaleString(I18N.lang === 'en' ? 'en-GB' : 'fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+    const titleStr = `${L('Règle', 'Rule')} #${r.id} — ${plainText(r.libelle_court || r.libelle || '')}`;
     // Formule dont la lecture automatique a été écartée : on n'imprime que le
     // renvoi aux paramètres, pas le rappel générique de la syntaxe _039.
     const noRead = (!interp && r.rule_type === '_039_STD_GTA_Formula');
     return `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${I18N.lang}">
 <head>
 <meta charset="UTF-8">
 <title>${esc(titleStr)}</title>
@@ -857,44 +859,44 @@ ${r.libelle_court && r.libelle_court !== r.libelle ? `<div class="meta-sub">${ri
 <div class="pills">
   <span class="pill code">#${r.id}</span>
   <span class="pill code">${esc(r.rule_type || '')}</span>
-  ${r.code ? `<span class="pill">code : ${esc(r.code)}</span>` : ''}
-  ${r.compteur ? '<span class="pill counter">Compteur paie</span>' : '<span class="pill">Intermédiaire</span>'}
-  ${r.periode ? `<span class="pill">Période : ${esc(r.periode)}</span>` : ''}
-  ${r.ordre != null ? `<span class="pill">Ordre : ${r.ordre}</span>` : ''}
+  ${r.code ? `<span class="pill">${L('code : ', 'code: ')}${esc(r.code)}</span>` : ''}
+  ${r.compteur ? `<span class="pill counter">${L('Compteur paie', 'Payroll counter')}</span>` : `<span class="pill">${L('Intermédiaire', 'Intermediate')}</span>`}
+  ${r.periode ? `<span class="pill">${L('Période : ', 'Period: ')}${esc(r.periode)}</span>` : ''}
+  ${r.ordre != null ? `<span class="pill">${L('Ordre : ', 'Order: ')}${r.ordre}</span>` : ''}
 </div>
 ${(interp || doc || (spec && (spec.description_en || spec.kb_link))) ? `<div class="doc-box">
   ${spec && spec.kb_link ? `<a class="kb-link" href="${esc(spec.kb_link)}" target="_blank" rel="noopener">Doc #Dièse ↗</a>` : ''}
-  ${noRead ? '' : `<div class="doc-title">${esc(interp ? 'Que fait cette formule ?' : (doc ? doc.title : (r.rule_type || 'Description')))}</div>`}
+  ${noRead ? '' : `<div class="doc-title">${esc(human ? L('Ce que fait la règle', 'What the rule calculates') : interp ? L('Que fait cette formule ?', 'What does this formula do?') : (doc ? doc.title : (r.rule_type || 'Description')))}</div>`}
   ${noRead
-    ? `<div class="doc-text" style="color:#6e6e73">Formule trop imbriquée pour une lecture automatique fiable — voir le bloc « Paramètres » ci-dessous.</div>`
-    : `<div class="doc-text">${esc(interp || (doc && doc.desc) || (spec && spec.description_en) || 'Description française non disponible.')}</div>`}
-  ${(!noRead && spec && spec.description_en && doc) ? `<div class="doc-en">${esc(spec.description_en)}</div>` : ''}
-  ${interp ? `<div class="doc-en">Source : ${esc(doc ? doc.title : 'Formule de calcul')} · analyse statique</div>` : ''}
+    ? `<div class="doc-text" style="color:#6e6e73">${L('Formule trop imbriquée pour une lecture automatique fiable — voir le bloc « Paramètres » ci-dessous.', 'Formula too nested for a reliable automatic reading — see the “Settings” block below.')}</div>`
+    : `<div class="doc-text">${esc(interp || (doc && doc.desc) || (spec && spec.description_en) || L('Description française non disponible.', 'No description available.'))}</div>`}
+  ${(!noRead && spec && spec.description_en && doc && I18N.lang !== 'en') ? `<div class="doc-en">${esc(spec.description_en)}</div>` : ''}
+  ${interp && !human ? `<div class="doc-en">${L('Source : ', 'Source: ')}${esc(doc ? doc.title : L('Formule de calcul', 'Calculation formula'))} · ${L('analyse statique', 'static analysis')}</div>` : ''}
 </div>` : ''}
-<h2>Affectations</h2>
+<h2>${L('Affectations', 'Assignments')}</h2>
 ${affectations.length
   ? `<div class="affect-grid">${affectations.map(a => `<div class="affect ${a.bold ? 'bold' : ''}"><span class="num">#${esc(a.id)}</span><span class="lib">${esc(a.lib)}</span></div>`).join('')}</div>`
-  : '<div class="empty">Aucune affectation</div>'}
-<h2>Paramètres</h2>
-${paramsBlocks || '<div class="empty">Aucun paramètre</div>'}
-${(spec && spec.params && spec.params.length) ? `<h2>Spec officielle (${spec.params.length}) · * = obligatoire</h2>
+  : `<div class="empty">${L('Aucune affectation', 'No assignment')}</div>`}
+<h2>${L('Paramètres', 'Settings')}</h2>
+${paramsBlocks || `<div class="empty">${L('Aucun paramètre', 'No setting')}</div>`}
+${(spec && spec.params && spec.params.length) ? `<h2>${L('Spec officielle', 'Official spec')} (${spec.params.length}) · * = ${L('obligatoire', 'required')}</h2>
 <div class="spec-grid">${spec.params.map(p => `<div class="spec-item${p.mandatory ? ' mand' : ''}"><span class="label">${esc(p.label)}${p.mandatory ? ' <span class="spec-mand">*</span>' : ''}</span><span class="spec-editor">${esc(p.editor || '')}</span></div>`).join('')}</div>` : ''}
-<h2>Dépendances</h2>
+<h2>${L('Dépendances', 'Dependencies')}</h2>
 <div class="deps-row">
   <div class="deps-col">
-    <h3>Amont (dépend de)</h3>
+    <h3>${L('Amont (dépend de)', 'Upstream (depends on)')}</h3>
     ${deps.length
       ? `<div class="deps-list">${deps.map(d => `<span class="dep"><span class="num">#${d.id}</span><span class="lib">${d.lib}</span></span>`).join('')}</div>`
       : '<div class="empty">Aucune</div>'}
   </div>
   <div class="deps-col">
-    <h3>Aval (utilisée par)</h3>
+    <h3>${L('Aval (utilisée par)', 'Downstream (used by)')}</h3>
     ${rdeps.length
       ? `<div class="deps-list">${rdeps.map(d => `<span class="dep"><span class="num">#${d.id}</span><span class="lib">${d.lib}</span></span>`).join('')}</div>`
       : '<div class="empty">Aucune</div>'}
   </div>
 </div>
-<footer>Rapport généré le ${esc(generatedAt)} via GTA Cartographe #Dièse. « Lecture humaine » d'une formule = analyse statique, à vérifier sur les cas atypiques.</footer>
+<footer>${L(`Rapport généré le ${esc(generatedAt)} par l'Atelier GTA #Dièse.`, `Report generated on ${esc(generatedAt)} by the #Dièse GTA Atelier.`)}</footer>
 </body>
 </html>`;
   },
@@ -911,7 +913,7 @@ ${(spec && spec.params && spec.params.length) ? `<h2>Spec officielle (${spec.par
       const isFormula = /^_\d+_.*Formula/i.test(rawKey);
       const displayKey = isFormula ? 'Formule' : rawKey;
       if (!rawVal || rawVal === '-') {
-        return `<div class="pline"><div class="pkey">${esc(displayKey)}</div><div class="pval empty">— (non défini)</div></div>`;
+        return `<div class="pline"><div class="pkey">${esc(displayKey)}</div><div class="pval empty">— ${L('(non défini)', '(not set)')}</div></div>`;
       }
       if (typeof DT_KEYS_NUMERIC !== 'undefined' && DT_KEYS_NUMERIC.has(rawKey)) {
         const chips = rawVal.split(',').map(tok => {
@@ -928,7 +930,7 @@ ${(spec && spec.params && spec.params.length) ? `<h2>Spec officielle (${spec.par
         const rows = decodeThresholds(rawVal);
         if (rows.length) {
           const trs = rows.map(r => `<tr><td>${r.from}</td><td>${r.to}</td><td class="tval">${r.value}</td></tr>`).join('');
-          return `<div class="pline"><div class="pkey">${esc(displayKey)}</div><div class="pval"><table class="thresh"><thead><tr><th>de</th><th>à</th><th>valeur</th></tr></thead><tbody>${trs}</tbody></table></div></div>`;
+          return `<div class="pline"><div class="pkey">${esc(displayKey)}</div><div class="pval"><table class="thresh"><thead><tr><th>${L('de', 'from')}</th><th>${L('à', 'to')}</th><th>${L('valeur', 'value')}</th></tr></thead><tbody>${trs}</tbody></table></div></div>`;
         }
       }
       let displayVal;
@@ -939,14 +941,14 @@ ${(spec && spec.params && spec.params.length) ? `<h2>Spec officielle (${spec.par
         s = s.replace(/rule(\d+)/g, (mm, n) => {
           const nid = parseInt(n, 10);
           const ru = STATE.byId.get(nid);
-          if (!ru) return `<span style="color:#cf222e">rule${n} (absent)</span>`;
+          if (!ru) return `<span style="color:#cf222e">rule${n} ${L('(absent)', '(missing)')}</span>`;
           return `<span style="color:#0a4a8f;background:rgba(0,113,227,.09);padding:1px 5px;border-radius:5px"><span style="font-size:10.5px;opacity:.75">#${n}</span> ${richText(ru.libelle_court || ru.libelle || '')}</span>`;
         });
         s = s.replace(/htime(\d+)/g, (mm, n) => {
           const nid = parseInt(n, 10);
-          if (nid === 0) return `<span style="background:#f6f8fa;padding:0 4px;border-radius:3px">htime0 <span style="font-size:10.5px;color:#656d76">(h. standard)</span></span>`;
+          if (nid === 0) return `<span style="background:#f6f8fa;padding:0 4px;border-radius:3px">htime0 <span style="font-size:10.5px;color:#656d76">${L('(h. standard)', '(standard h.)')}</span></span>`;
           const dt = STATE.dayTypes.get(nid);
-          const tip = dt ? esc(plainText(dt.libelle_court || dt.libelle || '')) : `type ${nid}`;
+          const tip = dt ? esc(plainText(dt.libelle_court || dt.libelle || '')) : `${L('type', 'type')} ${nid}`;
           const bg = dt && dt.hex_bg ? dt.hex_bg : '#f6f8fa';
           const fg = dt && dt.hex_fg ? dt.hex_fg : '#1a1a1a';
           return `<span style="background:${bg};color:${fg};padding:0 4px;border-radius:3px">htime${n} <span style="font-size:10.5px;opacity:.75">${tip}</span></span>`;
@@ -957,7 +959,7 @@ ${(spec && spec.params && spec.params.length) ? `<h2>Spec officielle (${spec.par
         s = s.replace(/rule(\d+)/g, (mm, n) => {
           const nid = parseInt(n, 10);
           const ru = STATE.byId.get(nid);
-          if (!ru) return `<span style="color:#cf222e">rule${n} (absent)</span>`;
+          if (!ru) return `<span style="color:#cf222e">rule${n} ${L('(absent)', '(missing)')}</span>`;
           return `<span style="color:#0a4a8f">rule${n}</span> <span style="font-size:11px;color:#6e6e73">(${richText(ru.libelle_court || ru.libelle || '')})</span>`;
         });
         displayVal = `<div class="pval">${s}</div>`;

@@ -19,10 +19,13 @@ RULE_KEYS = {'id', 'rule_type', 'libelle', 'libelle_court', 'libelle_court_ligne
              'ordre', 'compteur', 'periode', 'affectations', 'parametres', 'regle_manuelle',
              'affect_regle_manuelle', 'calcul_budget', 'affiche_diese', 'sa_ordre_technique',
              'deps', 'description', 'repli', 'contrats'}
-TOP_KEYS = {'moteur', 'genere_le', 'format', 'anomalies', 'diagnostic', 'diagnostic_texte',
-            'regles', 'references_cassees', 'contrats', 'types_jour', 'audit', 'referentiels'}
-DAY_KEYS = {'id', 'libelle', 'libelle_court', 'categorie', 'actif', 'duree_min', 'ordre',
-            'hex_bg', 'hex_fg', 'regles'}
+TOP_KEYS = {'moteur', 'genere_le', 'format', 'format_en', 'anomalies', 'diagnostic',
+            'diagnostic_texte', 'diagnostic_texte_en', 'regles', 'references_cassees',
+            'contrats', 'types_jour', 'audit', 'referentiels', 'referentiels_en',
+            'referentiels_manquants'}
+DAY_KEYS = {'id', 'libelle', 'libelle_court', 'categorie', 'categorie_en', 'actif', 'duree_min',
+            'ordre', 'hex_bg', 'hex_fg', 'regles'}
+FINDING_KEYS = {'code', 'titre', 'titre_en', 'nombre', 'objet', 'ids', 'note', 'note_en'}
 
 CHECKS = []
 
@@ -54,6 +57,10 @@ def forme_du_modele(tmp):
         assert r['description']['fr'] and r['description']['en']
     for d in m['types_jour']:
         assert set(d) == DAY_KEYS, set(d) ^ DAY_KEYS
+    for f in m['audit']['a_corriger'] + m['audit']['a_savoir']:
+        assert set(f) == FINDING_KEYS, set(f) ^ FINDING_KEYS
+        assert f['titre_en'] and (f['note_en'] or not f['note'])
+    assert m['diagnostic_texte_en'].startswith('Column format detected')
     json.dumps(m)                                           # sérialisable tel quel
 
 
@@ -75,6 +82,7 @@ def contrats_et_types_de_jour(tmp):
     days = {d['id']: d for d in m['types_jour']}
     assert days[7]['hex_bg'] == '#87CEFA' and days[7]['regles'] == 1 and days[25]['regles'] == 0
     assert days[25]['actif'] is False
+    assert days[7]['categorie_en'] == 'Effective working time'
 
 
 @check

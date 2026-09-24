@@ -192,10 +192,10 @@ const Optimizations = {
     if (total === 0 || Optimizations.totalFormulas === 0) {
       ind.classList.remove('info');
       ico.textContent = '✓';
-      txt.textContent = 'Aucune piste d\'optimisation';
+      txt.textContent = L('Aucune piste d\'optimisation', 'No optimisation hint');
       ind.title = Optimizations.totalFormulas === 0
-        ? 'Aucune règle de type formule dans le dataset.'
-        : 'Aucune piste d\'optimisation détectée sur les formules.';
+        ? L('Aucune règle de type formule dans le dataset.', 'No formula rule in the dataset.')
+        : L('Aucune piste d\'optimisation détectée sur les formules.', 'No optimisation hint found in the formulas.');
     } else {
       ind.classList.add('info');
       ico.textContent = 'ℹ';
@@ -203,9 +203,10 @@ const Optimizations = {
       if (c.identical.length) parts.push(`${c.identical.length} ident.`);
       if (c.constant.length) parts.push(`${c.constant.length} const.`);
       if (c.repeated.length) parts.push(`${c.repeated.length} factor.`);
-      if (c.deep.length) parts.push(`${c.deep.length} prof.`);
+      if (c.deep.length) parts.push(`${c.deep.length} ${L('prof.', 'depth')}`);
       txt.textContent = parts.join(' · ');
-      ind.title = `${total} pistes d'optimisation sur ${Optimizations.totalFormulas} formules. Cliquez pour détailler.`;
+      ind.title = L(`${total} pistes d'optimisation sur ${Optimizations.totalFormulas} formules. Cliquez pour détailler.`,
+                    `${total} optimisation hints across ${Optimizations.totalFormulas} formulas. Click for details.`);
     }
     Optimizations.renderPopover();
   },
@@ -215,20 +216,20 @@ const Optimizations = {
     if (!root) return;
     const c = Optimizations.cats;
     const stats = document.getElementById('opti-pop-stats');
-    if (stats) stats.textContent = Optimizations.totalFormulas + ' formules analysées';
+    if (stats) stats.textContent = Optimizations.totalFormulas + L(' formules analysées', ' formulas analysed');
     const sections = [];
 
     // (1) Identiques
     sections.push(`<div class="opt-section">
-      <h4>Formules identiques entre règles <span class="cnt ${c.identical.length?'has':''}">${c.identical.length}</span></h4>
-      ${c.identical.length === 0 ? '<div class="opt-empty">Aucune formule en doublon.</div>' :
+      <h4>${L('Formules identiques entre règles', 'Identical formulas across rules')} <span class="cnt ${c.identical.length?'has':''}">${c.identical.length}</span></h4>
+      ${c.identical.length === 0 ? `<div class="opt-empty">${L('Aucune formule en doublon.', 'No duplicated formula.')}</div>` :
         c.identical.slice(0, 10).map(g => {
           const bodyShort = g.body.length > 130 ? g.body.slice(0, 130) + '…' : g.body;
           const ruleList = g.rules.slice(0, 12).map(r =>
             `<a class="opt-jump" data-jump="${r.id}" title="${escapeAttr(plainText(r.libelle))}">#${r.id}</a>`).join(' ');
           const more = g.rules.length > 12 ? ` <span style="color:var(--muted);font-size:10.5px">+${g.rules.length - 12}</span>` : '';
           return `<div class="opt-item">
-            <div class="opt-meta">${g.count} règles partagent cette formule — candidat à factorisation</div>
+            <div class="opt-meta">${L(`${g.count} règles partagent cette formule — candidat à factorisation`, `${g.count} rules share this formula — candidate for factoring`)}</div>
             <code class="opt-code">${escapeHtml(bodyShort)}</code>
             <div class="opt-jumps">${ruleList}${more}</div>
           </div>`;
@@ -238,21 +239,21 @@ const Optimizations = {
 
     // (2) Constantes
     sections.push(`<div class="opt-section">
-      <h4>Branches if(then == else) — résultat constant <span class="cnt ${c.constant.length?'has':''}">${c.constant.length}</span></h4>
-      ${c.constant.length === 0 ? '<div class="opt-empty">Aucune branche if avec then == else.</div>' :
+      <h4>${L('Branches if(then == else) — résultat constant', 'if(then == else) branches — constant result')} <span class="cnt ${c.constant.length?'has':''}">${c.constant.length}</span></h4>
+      ${c.constant.length === 0 ? `<div class="opt-empty">${L('Aucune branche if avec then == else.', 'No if branch with then == else.')}</div>` :
         c.constant.slice(0, 15).map(it => `<div class="opt-item opt-clickable" data-jump="${it.ruleId}">
           <span class="opt-rid">#${it.ruleId}</span>
           <span class="opt-lib">${richText(it.libelle)}</span>
           <code class="opt-code-inline">${escapeHtml(it.snippet.length > 80 ? it.snippet.slice(0, 80) + '…' : it.snippet)}</code>
-          <span class="opt-tag">→ toujours ${escapeHtml(it.value)}</span>
+          <span class="opt-tag">→ ${L('toujours', 'always')} ${escapeHtml(it.value)}</span>
         </div>`).join('')
       }
     </div>`);
 
     // (3) Sous-expressions répétées
     sections.push(`<div class="opt-section">
-      <h4>Sous-expressions partagées <span class="cnt ${c.repeated.length?'has':''}">${c.repeated.length}</span></h4>
-      ${c.repeated.length === 0 ? '<div class="opt-empty">Aucune sous-expression apparaissant dans 3+ formules.</div>' :
+      <h4>${L('Sous-expressions partagées', 'Shared sub-expressions')} <span class="cnt ${c.repeated.length?'has':''}">${c.repeated.length}</span></h4>
+      ${c.repeated.length === 0 ? `<div class="opt-empty">${L('Aucune sous-expression apparaissant dans 3+ formules.', 'No sub-expression found in 3+ formulas.')}</div>` :
         c.repeated.slice(0, 10).map(it => {
           const exprShort = it.expr.length > 130 ? it.expr.slice(0, 130) + '…' : it.expr;
           const ruleList = it.formulas.slice(0, 12).map(id =>
@@ -260,7 +261,7 @@ const Optimizations = {
           const more = it.formulas.length > 12 ? ` <span style="color:var(--muted);font-size:10.5px">+${it.formulas.length - 12}</span>` : '';
           return `<div class="opt-item">
             <code class="opt-code">${escapeHtml(exprShort)}</code>
-            <div class="opt-meta">apparaît dans ${it.count} formules · ${it.ruleCount} règles cumulées — candidate à factoriser en règle intermédiaire</div>
+            <div class="opt-meta">${L(`apparaît dans ${it.count} formules · ${it.ruleCount} règles cumulées — candidate à factoriser en règle intermédiaire`, `appears in ${it.count} formulas · ${it.ruleCount} rules in total — candidate for an intermediate rule`)}</div>
             <div class="opt-jumps">${ruleList}${more}</div>
           </div>`;
         }).join('')
@@ -269,12 +270,12 @@ const Optimizations = {
 
     // (4) Profondeur excessive
     sections.push(`<div class="opt-section">
-      <h4>Profondeur d'imbrication ≥ 3 <span class="cnt ${c.deep.length?'has':''}">${c.deep.length}</span></h4>
-      ${c.deep.length === 0 ? '<div class="opt-empty">Aucune formule avec plus de 3 if imbriqués.</div>' :
+      <h4>${L('Profondeur d\'imbrication ≥ 3', 'Nesting depth ≥ 3')} <span class="cnt ${c.deep.length?'has':''}">${c.deep.length}</span></h4>
+      ${c.deep.length === 0 ? `<div class="opt-empty">${L('Aucune formule avec plus de 3 if imbriqués.', 'No formula with more than 3 nested ifs.')}</div>` :
         c.deep.slice(0, 15).map(it => `<div class="opt-item opt-clickable" data-jump="${it.ruleId}">
           <span class="opt-rid">#${it.ruleId}</span>
           <span class="opt-lib">${richText(it.libelle)}</span>
-          <span class="opt-tag">profondeur ${it.depth} · ${it.length} caractères</span>
+          <span class="opt-tag">${L(`profondeur ${it.depth} · ${it.length} caractères`, `depth ${it.depth} · ${it.length} characters`)}</span>
         </div>`).join('')
       }
     </div>`);

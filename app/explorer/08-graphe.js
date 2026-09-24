@@ -43,7 +43,7 @@ const Graph = {
       }
     }
     const affSel = document.getElementById('filter-affect');
-    affSel.innerHTML = '<option value="">— Toutes les affectations —</option>' +
+    affSel.innerHTML = `<option value="">${L('— Toutes les affectations —', '— All assignments —')}</option>` +
       [...affectSet].sort().map(a=>`<option value="${escapeAttr(a)}">${escapeHtml(a)}</option>`).join('');
 
     // Construction des datasets vis
@@ -53,9 +53,7 @@ const Graph = {
     STATE.nodeDS = new vis.DataSet(visNodes);
     STATE.edgeDS = new vis.DataSet(visEdges);
 
-    document.getElementById('stats').textContent =
-      `${STATE.rules.length} règles · ${edges.length} dépendances` +
-      (STATE.dayTypes.size ? ` · ${STATE.dayTypes.size} types de jour` : '');
+    Graph.paintStats();
 
     // Cache l'écran d'accueil dès qu'un dataset est chargé
     const welcome = document.getElementById('welcome-overlay');
@@ -71,10 +69,17 @@ const Graph = {
   loadDayTypes(dts) {
     STATE.dayTypes = new Map(dts.map(d => [d.id, d]));
     UI.renderDayTypePanel();
-    document.getElementById('stats').textContent =
-      `${STATE.rules.length} règles · ${STATE.edges.length} dépendances · ${STATE.dayTypes.size} types de jour`;
+    Graph.paintStats();
     if (STATE.showDtLayer) Graph.refreshDayTypeLayer();
     if (STATE.selected) UI.renderDetail(STATE.byId.get(STATE.selected));
+  },
+
+  paintStats() {
+    const n = STATE.rules.length, e = STATE.edges.length, d = STATE.dayTypes.size;
+    document.getElementById('stats').textContent =
+      Ln(n, 'règle', 'règles', 'rule', 'rules') + ' · ' +
+      Ln(e, 'dépendance', 'dépendances', 'dependency', 'dependencies') +
+      (d ? ' · ' + Ln(d, 'type de jour', 'types de jour', 'day type', 'day types') : '');
   },
 
   makeRuleNode(r) {
@@ -83,7 +88,7 @@ const Graph = {
     return {
       id: r.id,
       label,
-      title: htmlTooltip(`<b>#${r.id} · ${richText(r.libelle || '')}</b><br>${escapeHtml(r.rule_type || '')}<br>${(r.deps && r.deps.length) ? 'Dépend de : '+r.deps.map(d => '#'+d).join(', ') : 'Aucune dépendance'}`),
+      title: htmlTooltip(`<b>#${r.id} · ${richText(r.libelle || '')}</b><br>${escapeHtml(r.rule_type || '')}<br>${(r.deps && r.deps.length) ? L('Dépend de : ', 'Depends on: ')+r.deps.map(d => '#'+d).join(', ') : L('Aucune dépendance', 'No dependency')}`),
       color: { background: color, border: THEME.nodeBorder(color), highlight:{background:color, border:THEME.t.hl} },
       font: {color:THEME.t.nodeFont, strokeWidth:THEME.t.nodeStrokeW, strokeColor:THEME.t.nodeStroke},
       _kind: 'rule'
@@ -107,7 +112,7 @@ const Graph = {
       // qui donne le contraste nécessaire. Le stroke hérité des règles de type
       // "dot" (fond sombre) rendait le texte flou/peu lisible ici.
       font: {color: dt.hex_fg || '#000', size:11, strokeWidth:0, face:'-apple-system,sans-serif'},
-      title: htmlTooltip(`<b>Type de jour #${dt.id} · ${richText(dt.libelle || '')}</b><br>${escapeHtml(dt.categorie || '')}`),
+      title: htmlTooltip(`<b>${L('Type de jour', 'Day type')} #${dt.id} · ${richText(dt.libelle || '')}</b><br>${escapeHtml(dt.categorie || '')}`),
       _kind: 'daytype'
     };
   },

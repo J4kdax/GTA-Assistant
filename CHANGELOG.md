@@ -1,5 +1,40 @@
 # Historique
 
+## v2.1 — 24/09/2026 — Interface bilingue
+
+**Nouveau**
+
+- Interface entièrement disponible en anglais : slider **FR | EN** dans l'en-tête, utilisable à
+  tout moment (clic, ou flèches du clavier). Tous les onglets, l'Explorer, ses fenêtres
+  d'analyse, les pastilles d'audit du graphe, le panneau de détail et l'export PDF d'une règle
+  basculent sans recharger l'environnement ni perdre la disposition du graphe.
+- La langue est mémorisée d'une visite à l'autre ; à la première visite, elle suit celle du
+  navigateur.
+- Le dossier client prend par défaut la langue de l'interface (toujours modifiable dans
+  l'onglet Dossier client).
+- Dictionnaire anglais des 64 types de règle documentés de l'Explorer
+  (`app/explorer/02b-constantes-en.js`).
+- Le catalogue suit la langue de l'interface : le sélecteur FR / EN propre au catalogue disparaît.
+
+**Moteur**
+
+- Le modèle fournit aussi en anglais ce qui n'existait qu'en français : constats d'audit
+  (`titre_en`, `note_en`), relevé du diagnostic (`diagnostic_texte_en`), référentiels manquants
+  (`referentiels_manquants`, libellés et exports à demander dans les deux langues), rapport de
+  chargement des référentiels (`referentiels_en`), format détecté (`format_en`), catégorie des
+  types de jour (`categorie_en`), anomalies d'export.
+- `identify_files` renvoie aussi un classement structuré (`fichiers`, `manque_codes`), traduit
+  par l'interface.
+- `format_diagnosis(d, lang)` et `load_referentials(specs, lang)` acceptent une langue ; la ligne
+  de commande reste en français.
+- Classeurs identiques à la v2.0 cellule par cellule.
+
+**Qualité**
+
+- `tests/navigateur.py` bascule en anglais, parcourt tous les onglets et l'audit du graphe en
+  cherchant des mots français restés visibles (hors libellés du client), vérifie la mémorisation
+  après rechargement et compare les dossiers FR et EN téléchargés à la ligne de commande.
+
 ## v2.0 — 24/09/2026 — Atelier GTA
 
 Première version de l'Atelier : fusion du Cartographe GTA v3.5.2 et du Dossier de paramétrage

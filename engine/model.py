@@ -28,7 +28,7 @@ import json
 import re
 
 from tables import is_missing
-from dossier_common import (clean_code, clean_label, contract_index, daytype_usage, diagnose,
+from dossier_common import (FORMAT_EN, NATURES, REFERENTIAL_EN, clean_code, clean_label, contract_index, daytype_usage, diagnose,
                             effective_order, format_diagnosis, load_daytype_details,
                             load_daytypes, load_referentials, load_rules,
                             parse_affectations, parse_params)
@@ -75,6 +75,23 @@ def _int_or_zero(value):
     return number if number is not None else 0
 
 
+# Intitulés anglais des constats d'audit (le français est écrit dans build_model).
+AUDIT_EN = {
+    'references_cassees': ('References to a rule that does not exist',
+                           'The rule cites a rule number that is not in the export.'),
+    'reference_incomplete': ('Incomplete rule reference',
+                             'The formula contains “rule” without a number.'),
+    'regles_mortes': ('Rules neither displayed, nor used, nor assigned',
+                      'Candidates for removal, to be confirmed with the client.'),
+    'sans_affectation': ('Rules assigned to no contract type',
+                         'Some are still used by other rules.'),
+    'replis': ('Rules described as raw settings',
+               'Rule type without a dedicated translation, or unreadable setting.'),
+    'types_jour_inutilises': ('Declared day types that no rule uses',
+                              'To be reported to the client.'),
+}
+
+
 # --- construction du modèle ----------------------------------------------------
 
 def build_model(rules_path, daytypes_path=None, ref_specs=None, contracts=True):
@@ -82,6 +99,7 @@ def build_model(rules_path, daytypes_path=None, ref_specs=None, contracts=True):
     df = load_rules(rules_path)
     daytypes = load_daytypes(daytypes_path) if daytypes_path else {}
     referentials, ref_report = load_referentials(ref_specs or [])
+    _, ref_report_en = load_referentials(ref_specs or [], lang='en')
     diag = diagnose(df, daytypes, HANDLERS, referentials)
 
     columns, per_rule = contract_index(df) if contracts else ([], {})
@@ -158,6 +176,7 @@ def build_model(rules_path, daytypes_path=None, ref_specs=None, contracts=True):
         'libelle': d['public'],
         'libelle_court': d['court'],
         'categorie': d['nature'],
+        'categorie_en': (NATURES.get(d['nature'].lower()) or (None, d['nature']))[1],
         'actif': d['actif'],
         'duree_min': _as_int(d['duree']),
         'ordre': _as_int(d['ordre']),
@@ -171,8 +190,10 @@ def build_model(rules_path, daytypes_path=None, ref_specs=None, contracts=True):
 
     def finding(level, code, title, ids, note='', objet='regle'):
         if ids:
-            audit[level].append({'code': code, 'titre': title, 'nombre': len(ids),
-                                 'objet': objet, 'ids': ids, 'note': note})
+            title_en, note_en = AUDIT_EN[code]
+            audit[level].append({'code': code, 'titre': title, 'titre_en': title_en,
+                                 'nombre': len(ids), 'objet': objet, 'ids': ids,
+                                 'note': note, 'note_en': note_en if note else ''})
 
     finding('a_corriger', 'references_cassees', 'Renvois vers une règle inexistante',
             [m['id'] for m in missing_refs],
@@ -187,23 +208,35 @@ def build_model(rules_path, daytypes_path=None, ref_specs=None, contracts=True):
             'Type de règle sans traduction dédiée, ou paramètre illisible.')
     finding('a_savoir', 'types_jour_inutilises', 'Types de jour déclarés qu\'aucune règle '
             'n\'utilise', unused_days, 'Constat à remonter au client.', objet='type_jour')
-    for note in df.attrs.get('anomalies', []):
+    for note, note_en in zip(df.attrs.get('anomalies', []), df.attrs.get('anomalies_en', [])):
         audit['a_corriger'].append({'code': 'export', 'titre': 'Export corrigé à la lecture',
-                                    'nombre': 1, 'objet': 'export', 'ids': [], 'note': note})
+                                    'titre_en': 'Export corrected on reading', 'nombre': 1,
+                                    'objet': 'export', 'ids': [], 'note': note, 'note_en': note_en})
+
+    missing_refs_named = [{
+        'famille': family,
+        'libelle': {'fr': family, 'en': REFERENTIAL_EN.get(family, (family, ask))[0]},
+        'occurrences': occ, 'regles': n,
+        'demande': {'fr': ask, 'en': REFERENTIAL_EN.get(family, (family, ask))[1]},
+    } for family, occ, n, ask in diag['referentiels']]
 
     return {
         'moteur': VERSION,
         'genere_le': dt.datetime.now().isoformat(timespec='seconds'),
         'format': df.attrs.get('format'),
+        'format_en': FORMAT_EN.get(df.attrs.get('format'), df.attrs.get('format')),
         'anomalies': list(df.attrs.get('anomalies', [])),
         'diagnostic': diag,
         'diagnostic_texte': format_diagnosis(diag),
+        'diagnostic_texte_en': format_diagnosis(diag, 'en'),
+        'referentiels_manquants': missing_refs_named,
         'regles': regles,
         'references_cassees': missing_refs,
         'contrats': contrats,
         'types_jour': types_jour,
         'audit': audit,
         'referentiels': ref_report,
+        'referentiels_en': ref_report_en,
     }
 
 

@@ -12,6 +12,11 @@ Il succède à deux outils qui lisaient les mêmes exports chacun de leur côté
 
 **Tout s'exécute dans le navigateur.** Aucun fichier client n'est envoyé à un serveur.
 
+L'interface existe en **français et en anglais** : le slider FR | EN de l'en-tête bascule toute
+la page à n'importe quel moment, et le dossier client prend par défaut la même langue. Les
+libellés venant de l'environnement du client (règles, contrats, types de jour) restent dans leur
+langue d'origine, pour qu'on les retrouve à l'identique dans #Dièse.
+
 ---
 
 ## Les onglets
@@ -53,6 +58,7 @@ exports déposés ──► engine/ (Python, Web Worker) ──► modèle d'env
 .
 ├── index.html               coquille : en-tête, onglets, vues
 ├── app/
+│   ├── i18n.js              langue de l'interface : slider FR | EN, L('fr', 'en'), data-en
 │   ├── shell.js             dépôt des fichiers, état partagé, navigation
 │   ├── engine.js            pont vers le moteur (une promesse par commande)
 │   ├── engine-worker.js     Web Worker : Pyodide, openpyxl, modules d'engine/
@@ -118,6 +124,11 @@ code : une correction profite aux deux.
   onglet dans `nav.tabs`, et un objet `render(model)` appelé par `Views.render`. Il lit le modèle,
   jamais les fichiers.
 - **Un champ ajouté au modèle** se déclare dans `tests/modele.py`.
+- **Tout texte affiché** existe en français et en anglais : `L('Texte', 'Text')` dans le code,
+  `data-en="Text"` (ou `data-en-html`, `data-en-title`, `data-en-placeholder`, `data-en-aria`) dans
+  le HTML. Un texte produit par du code doit être refait dans `Shell.relabel()` ou
+  `Explorer.relabel()` quand la langue change. `tests/navigateur.py` échoue si un mot français
+  reste visible en anglais.
 - **La version** se change à quatre endroits, vérifiés par la CI : `engine/build_xlsx.py`
   (`VERSION`), `app/shell.js`, le `<title>` d'`index.html`, l'historique de `skill/SKILL.md` et
   `CHANGELOG.md`.

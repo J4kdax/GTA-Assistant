@@ -151,7 +151,7 @@ def load_rules(path):
     renames = COLUMN_FORMATS[fmt]
     columns = [renames.get(c, c) for c in sheet.columns]
     rows = [{renames.get(k, k): v for k, v in row.items()} for row in sheet.rows]
-    anomalies = []
+    anomalies, anomalies_en = [], []
     for optional in ('Code', 'Compteur ?', 'Affiché dièse ?', 'Règle manuelle',
                      'Calcul budget ?', 'Affectation règle manuelle', 'SA : Ordre technique'):
         if optional not in columns:
@@ -173,6 +173,7 @@ def load_rules(path):
         kept.append(row)
     if bad:
         anomalies.append("%d ligne(s) sans identifiant de règle exploitable, ignorée(s)" % bad)
+        anomalies_en.append("%d row(s) without a usable rule id, ignored" % bad)
 
     seen, unique = set(), []
     for row in kept:
@@ -182,6 +183,7 @@ def load_rules(path):
             unique.append(row)
     if len(unique) < len(kept):
         anomalies.append("%d ligne(s) en double exact, retirée(s)" % (len(kept) - len(unique)))
+        anomalies_en.append("%d exact duplicate row(s), removed" % (len(kept) - len(unique)))
 
     first, dup = {}, set()
     for row in unique:
@@ -193,6 +195,8 @@ def load_rules(path):
         anomalies.append("identifiant(s) présent(s) plusieurs fois avec un contenu différent, "
                          "seule la première ligne est gardée : %s"
                          % ', '.join('#%d' % i for i in sorted(dup)))
+        anomalies_en.append("id(s) found several times with different content, only the first row "
+                            "is kept: %s" % ', '.join('#%d' % i for i in sorted(dup)))
     rows = list(first.values())
 
     for position, row in enumerate(rows):
@@ -200,7 +204,8 @@ def load_rules(path):
         row['Règle'] = '' if is_missing(row.get('Règle')) else str(row['Règle']).strip()
         for flag in ('Compteur ?', 'Affiché dièse ?'):
             row[flag] = _flag(row.get(flag))
-    return Table(rows, columns, {'format': fmt, 'anomalies': anomalies})
+    return Table(rows, columns, {'format': fmt, 'anomalies': anomalies,
+                                     'anomalies_en': anomalies_en})
 
 
 DAYTYPE_COLUMNS = {
@@ -608,43 +613,95 @@ def diagnose(df, daytypes=None, handlers=None, referentials=None):
                          if not (referentials or {}).get(family)],
         'referentiels_fournis': sorted((referentials or {}).keys()),
         'anomalies': list(getattr(df, 'attrs', {}).get('anomalies', [])),
+        'anomalies_en': list(getattr(df, 'attrs', {}).get('anomalies_en', [])),
     }
 
 
-def format_diagnosis(d):
-    lines = ["Format de colonnes détecté : %s" % d['format'],
-             "%d règles, %d types de règle, %d types de contrat, %d compteurs"
-             % (d['regles'], d['types'], d['contrats'], d['compteurs'])]
-    for note in d.get('anomalies', []):
-        lines.append("Export corrigé à la lecture : %s" % note)
+# Référentiels : libellé de famille et export à demander, en anglais (le français
+# est dans REFERENTIALS). Une famille absente ici reste affichée telle quelle.
+REFERENTIAL_EN = {
+    'taux': ('rate', 'rates export'),
+    'fonction': ('job', 'jobs export'),
+    "type d'activité": ('activity type', 'activity types export'),
+    'champ contrat': ('contract field', 'list of custom contract fields'),
+    'champ système': ('system field', 'list of system contract fields'),
+    'type de production': ('production type', 'production types export'),
+    'élément financier': ('financial element', 'financial elements export'),
+    'table de conversion': ('conversion table', 'conversion tables export'),
+    'champ contact': ('contact field', 'list of contact classification fields'),
+    'département': ('department', 'departments export'),
+    'champ activité': ('activity field', 'list of custom activity fields'),
+    'tâche': ('task', 'tasks export'),
+    'rôle prédéfini': ('predefined role', 'predefined roles export'),
+    'groupe de lieux': ('venue group', 'venue groups export'),
+}
+
+FORMAT_EN = {'français récent': 'recent French', 'anglais récent': 'recent English',
+             'anglais ancien': 'legacy English'}
+
+_DIAG = {
+    'format': ("Format de colonnes détecté : %s", "Column format detected: %s"),
+    'counts': ("%d règles, %d types de règle, %d types de contrat, %d compteurs",
+               "%d rules, %d rule types, %d contract types, %d counters"),
+    'fixed': ("Export corrigé à la lecture : %s", "Export corrected on reading: %s"),
+    'periods': ("Exercices de compteur : %s", "Counter periods: %s"),
+    'unassigned': ("%d règles ne sont affectées à aucun type de contrat",
+                   "%d rules are assigned to no contract type"),
+    'uncovered': ("Types de règle sans traduction dédiée (%d règles concernées) :",
+                  "Rule types without a dedicated translation (%d rules):"),
+    'days': ("À RÉCLAMER — export « Types de jour » : %d identifiants non résolus (%s…)",
+             "TO REQUEST — “Day types” export: %d unresolved ids (%s…)"),
+    'refs': ("À RÉCLAMER — référentiels manquants, par ordre de rendement :",
+             "TO REQUEST — missing reference data, most useful first:"),
+    'ref_line': ("   %-24s %4d occurrences / %3d règles  →  %s",
+                 "   %-24s %4d occurrences / %3d rules  →  %s"),
+    'given': ("Référentiels fournis et résolus : %s", "Reference data supplied and resolved: %s"),
+    'none': ("Aucun référentiel manquant : tout est nommé en clair.",
+             "No reference data missing: everything is named in plain words."),
+}
+
+
+def format_diagnosis(d, lang='fr'):
+    """Relevé préalable, en français (défaut, sortie de la ligne de commande) ou en anglais."""
+    i = 1 if lang == 'en' else 0
+
+    def T(key):
+        return _DIAG[key][i]
+
+    def fam(family):
+        return REFERENTIAL_EN.get(family, (family, None))[0] if i else family
+
+    fmt = FORMAT_EN.get(d['format'], d['format']) if i else d['format']
+    lines = [T('format') % fmt,
+             T('counts') % (d['regles'], d['types'], d['contrats'], d['compteurs'])]
+    for note in d.get('anomalies_en' if i else 'anomalies', []):
+        lines.append(T('fixed') % note)
     if d['periodes']:
-        lines.append("Exercices de compteur : %s" % ', '.join(d['periodes']))
+        lines.append(T('periods') % ', '.join(d['periodes']))
     if d['sans_affectation']:
-        lines.append("%d règles ne sont affectées à aucun type de contrat"
-                     % d['sans_affectation'])
+        lines.append(T('unassigned') % d['sans_affectation'])
     if d['types_non_couverts']:
         lines.append("")
-        lines.append("Types de règle sans traduction dédiée (%d règles concernées) :"
-                     % d['regles_non_couvertes'])
+        lines.append(T('uncovered') % d['regles_non_couvertes'])
         for t, n in sorted(d['types_non_couverts'].items(), key=lambda kv: -kv[1]):
             lines.append("   %4d  %s" % (n, t))
     if d['types_jour_non_resolus']:
         lines.append("")
-        lines.append("À RÉCLAMER — export « Types de jour » : %d identifiants non résolus (%s…)"
-                     % (len(d['types_jour_non_resolus']),
-                        ', '.join(str(i) for i in d['types_jour_non_resolus'][:8])))
+        lines.append(T('days') % (len(d['types_jour_non_resolus']),
+                                  ', '.join(str(x) for x in d['types_jour_non_resolus'][:8])))
     if d['referentiels']:
         lines.append("")
-        lines.append("À RÉCLAMER — référentiels manquants, par ordre de rendement :")
+        lines.append(T('refs'))
         for family, occ, rules, ask in d['referentiels']:
-            lines.append("   %-24s %4d occurrences / %3d règles  →  %s"
-                         % (family, occ, rules, ask))
+            if i:
+                ask = REFERENTIAL_EN.get(family, (None, ask))[1] or ask
+            lines.append(T('ref_line') % (fam(family), occ, rules, ask))
     if d.get('referentiels_fournis'):
         lines.append("")
-        lines.append("Référentiels fournis et résolus : %s" % ', '.join(d['referentiels_fournis']))
+        lines.append(T('given') % ', '.join(fam(f) for f in d['referentiels_fournis']))
     if not d['types_jour_non_resolus'] and not d['referentiels']:
         lines.append("")
-        lines.append("Aucun référentiel manquant : tout est nommé en clair.")
+        lines.append(T('none'))
     return '\n'.join(lines)
 
 
@@ -721,8 +778,11 @@ def load_referential(path, family=None):
     return family, {}
 
 
-def load_referentials(specs):
-    """['taux=fichier.xlsx', 'autre.xlsx'] -> ({famille: {id: libellé}}, [rapport])."""
+def load_referentials(specs, lang='fr'):
+    """['taux=fichier.xlsx', 'autre.xlsx'] -> ({famille: {id: libellé}}, [rapport]).
+
+    Le rapport est rédigé dans la langue demandée (français par défaut)."""
+    en = lang == 'en'
     tables, report = {}, []
     for spec in specs or []:
         family, path = (spec.split('=', 1) if '=' in spec else (None, spec))
@@ -730,13 +790,17 @@ def load_referentials(specs):
         family, table = load_referential(path.strip(), family)
         name = str(path).rsplit('/', 1)[-1]
         if not family:
-            report.append("%s : famille non reconnue — préciser avec « famille=fichier »" % name)
+            report.append("%s: family not recognised — specify it as “family=file”" % name if en else
+                          "%s : famille non reconnue — préciser avec « famille=fichier »" % name)
             continue
         if not table:
-            report.append("%s : aucun couple identifiant / libellé exploitable, ignoré" % name)
+            report.append("%s: no usable id / label pair, ignored" % name if en else
+                          "%s : aucun couple identifiant / libellé exploitable, ignoré" % name)
             continue
         tables.setdefault(family, {}).update(table)
-        report.append("%s : %d entrées chargées pour « %s »" % (name, len(table), family))
+        report.append("%s: %d entries loaded for “%s”"
+                      % (name, len(table), REFERENTIAL_EN.get(family, (family,))[0]) if en else
+                      "%s : %d entrées chargées pour « %s »" % (name, len(table), family))
     return tables, report
 
 
@@ -782,10 +846,17 @@ def identify_files(paths):
         'referentiels': [chemins], 'rapport': [lignes], 'manque': [str]}
     """
     result = {'regles': None, 'types de jour': None, 'referentiels': [],
-              'rapport': [], 'manque': []}
+              'rapport': [], 'manque': [], 'fichiers': [], 'manque_codes': []}
     for path in paths:
         name = str(path).rsplit('/', 1)[-1]
         kind = identify_file(path)
+        entry = {'nom': name, 'type': kind, 'famille': None, 'ignore': False}
+        result['fichiers'].append(entry)
+        if kind == 'referentiel':
+            entry['famille'] = guess_family(path)
+        elif kind is None or (kind == 'regles' and result['regles']) or \
+                (kind == 'types de jour' and result['types de jour']):
+            entry['ignore'] = True
         if kind == 'regles' and result['regles'] is None:
             result['regles'] = path
             result['rapport'].append("%s → export des règles GTA" % name)
@@ -808,6 +879,10 @@ def identify_files(paths):
                     "de la famille (taux, fonctions, activites…) pour qu'il soit exploité" % name)
         else:
             result['rapport'].append("%s → non reconnu, ignoré" % name)
+    if not result['regles']:
+        result['manque_codes'].append('regles')
+    if not result['types de jour']:
+        result['manque_codes'].append('types de jour')
     if not result['regles']:
         result['manque'].append("l'export des règles GTA, sans lequel rien ne peut être produit")
     if not result['types de jour']:

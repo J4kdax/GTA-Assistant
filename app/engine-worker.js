@@ -60,7 +60,8 @@ import json
 from dossier_common import identify_files
 tri = identify_files(list(chemins))
 json.dumps({'rapport': tri['rapport'], 'manque': tri['manque'], 'regles': tri['regles'],
-            'jours': tri['types de jour'], 'refs': tri['referentiels']}, ensure_ascii=False)
+            'jours': tri['types de jour'], 'refs': tri['referentiels'],
+            'fichiers': tri['fichiers'], 'manque_codes': tri['manque_codes']}, ensure_ascii=False)
 `));
   return tri;
 }

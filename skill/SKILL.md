@@ -144,6 +144,11 @@ faisaient planter la v1.8. Tout nouveau défaut d'export rencontré chez un clie
   `rule` sans numéro dans une formule, anomalies d'export) et « à savoir » (règles mortes, sans
   affectation, décrites en repli, types de jour inutilisés). La recherche de `rule` sans numéro
   ne porte que sur le corps des formules : « Source rule* » est un libellé de paramètre.
+- **Interface bilingue (v2.1).** Le modèle porte en français et en anglais tout ce que
+  l'interface affiche et qui vient du moteur (constats d'audit, diagnostic, référentiels
+  manquants, catégories de types de jour, anomalies). Toute nouvelle chaîne destinée à l'écran
+  s'ajoute dans les deux langues, comme les formulations du catalogue `M`. Côté page, les textes
+  s'écrivent `L('français', 'English')` ou avec un attribut `data-en` dans le HTML.
 - **`data/rule_specs.json`** : 185 spécifications officielles de types de règle (libellés, clés et
   caractère obligatoire des paramètres, lien KB), extraites du code PHP par le Cartographe. Elles
   sont affichées par l'Explorer ; elles sont la source à exploiter pour les prochains handlers.
@@ -479,6 +484,12 @@ référencées, ni affectées (8 cas) sont en revanche de vraies règles mortes 
 remonter au client, jamais un motif de les masquer du dossier.
 
 ## Versions
+
+- **v2.1** — interface de l'Atelier en français et en anglais (slider FR | EN, langue
+  mémorisée, dossier client qui suit la langue de l'interface). Le modèle fournit en anglais
+  constats d'audit, diagnostic, référentiels manquants, catégories de types de jour et
+  anomalies ; `format_diagnosis` et `load_referentials` prennent une langue. Classeurs
+  inchangés par rapport à la v2.0.
 
 - **v2.0** — Atelier GTA : fusion du Cartographe GTA v3.5.2 et du dossier de paramétrage dans
   une seule page, sur un moteur unique. Moteur sans pandas (`tables.py`), modèle

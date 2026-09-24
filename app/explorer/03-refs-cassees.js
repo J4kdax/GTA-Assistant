@@ -38,20 +38,21 @@ const BrokenRefs = {
     if (list.length === 0) {
       ind.classList.remove('warn');
       ico.textContent = '✓';
-      txt.textContent = 'Aucun appel caduc';
-      ind.title = 'Aucune référence ruleN cassée — la chaîne de calcul est complète.';
+      txt.textContent = L('Aucun appel caduc', 'No broken reference');
+      ind.title = L('Aucune référence ruleN cassée — la chaîne de calcul est complète.', 'No broken ruleN reference — the calculation chain is complete.');
     } else {
       ind.classList.add('warn');
       ico.textContent = '⚠';
-      txt.textContent = `${list.length} appel${list.length>1?'s':''} caduc${list.length>1?'s':''}`;
-      ind.title = `${list.length} référence${list.length>1?'s':''} ruleN qui pointe${list.length>1?'nt':''} vers une règle inexistante. Cliquez pour détailler.`;
+      txt.textContent = Ln(list.length, 'appel caduc', 'appels caducs', 'broken reference', 'broken references');
+      ind.title = L(`${list.length} référence${list.length>1?'s':''} ruleN qui pointe${list.length>1?'nt':''} vers une règle inexistante. Cliquez pour détailler.`,
+                    `${list.length} ruleN reference${list.length>1?'s':''} pointing to a rule that does not exist. Click for details.`);
     }
     const stats = document.getElementById('anom-pop-stats');
     const pop = document.getElementById('indicator-anom-list');
     if (!pop) return;
-    if (stats) stats.textContent = list.length === 0 ? '' : `${list.length} référence${list.length>1?'s':''} cassée${list.length>1?'s':''}`;
+    if (stats) stats.textContent = list.length === 0 ? '' : Ln(list.length, 'référence cassée', 'références cassées', 'broken reference', 'broken references');
     if (list.length === 0) {
-      pop.innerHTML = '<div class="br-empty">✓ Aucune référence vers une règle inexistante.</div>';
+      pop.innerHTML = `<div class="br-empty">✓ ${L('Aucune référence vers une règle inexistante.', 'No reference to a rule that does not exist.')}</div>`;
       return;
     }
     const sorted = list.slice().sort((a, b) => a.from - b.from || a.to - b.to);

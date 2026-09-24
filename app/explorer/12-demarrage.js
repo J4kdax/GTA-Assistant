@@ -31,7 +31,7 @@ function init() {
   document.getElementById('btn-relayout').addEventListener('click', () => {
     Graph.create();
     Graph.stabilizeAndLock();
-    toast('Disposition recalculée', 'ok');
+    toast(L('Disposition recalculée', 'Layout recomputed'), 'ok');
   });
   paintBrand();
   THEME.set(THEME.read() || 'light', {persist:false});
@@ -113,15 +113,48 @@ function init() {
 
 /* Point d'entrée de l'Atelier : le modèle vient du moteur (engine/model.py). */
 const Explorer = {
+  // Types de jour avec la catégorie dans la langue de l'interface.
+  dayTypes(model) {
+    const en = I18N.lang === 'en';
+    return (model.types_jour || []).map(d => ({ ...d, categorie: en ? (d.categorie_en || d.categorie) : d.categorie }));
+  },
+
   load(model) {
     Graph.loadDataset({ rules: model.regles });
-    Graph.loadDayTypes(model.types_jour || []);
+    Graph.loadDayTypes(Explorer.dayTypes(model));
     STATE.selected = null;
     UI.renderDetail(null);
   },
+
   // vis-network mesure son conteneur : on recadre quand l'onglet redevient visible.
   shown() {
     if (STATE.network) { STATE.network.redraw(); STATE.network.fit({ animation: false }); }
+  },
+
+  // Changement de langue : on refait tout ce que l'Explorer a écrit lui-même,
+  // sans reconstruire le graphe (la disposition et la sélection sont gardées).
+  relabel(model) {
+    Analyse.close();
+    THEME.set(THEME.current || 'light', { persist: false });
+    const affect = document.getElementById('filter-affect');
+    if (affect && affect.options.length) affect.options[0].textContent = L('— Toutes les affectations —', '— All assignments —');
+    if (STATE.nodeDS) {
+      STATE.nodeDS.update(STATE.rules.map(r => ({ id: r.id, title: Graph.makeRuleNode(r).title })));
+    }
+    Graph.loadDayTypes(Explorer.dayTypes(model));   // panneau, pastilles, décompte, détail
+    if (STATE.showDtLayer) Graph.refreshDayTypeLayer();
+    Graph.paintStats();
+    BrokenRefs.render();
+    Optimizations.render();
+    const sel = STATE.selected;
+    UI.renderDetail(typeof sel === 'number' ? STATE.byId.get(sel) : null);
+  },
+
+  relabelEmpty() {
+    THEME.set(THEME.current || 'light', { persist: false });
+    UI.renderDetail(null);
+    if (typeof BrokenRefs !== 'undefined') BrokenRefs.render();
+    if (typeof Optimizations !== 'undefined') Optimizations.render();
   },
 };
 

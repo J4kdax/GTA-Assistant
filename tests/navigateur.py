@@ -21,6 +21,7 @@ import os
 import sys
 import tempfile
 import threading
+import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -59,6 +60,29 @@ def local_cdn(route):
     return route.fulfill(status=200, path=path, content_type=ctype)
 
 
+# Mots français qui ne doivent plus être visibles une fois l'interface en anglais.
+# Les libellés du client (règles, contrats, types de jour) sont exclus : ils
+# restent dans leur langue d'origine par construction.
+FRENCH_LEFT = r"""() => {
+  const WORDS = /\b(règles?|Règles?|Aucune?|aucune?|Cliquez|Déposer|Déposez|dépendances?|Paramètres|Période|Compteur|Libellé|Accueil|Recherche|Fermer|Télécharger|Analyse|trouvé|chargé|référentiels?|affectations?|contrats?|niveau|formules?)\b/;
+  const skip = el => el.closest('.lib, .short, .chip, .an-node .lib, .dt-chip, .affect, .params, .pkey, .pval, option, #file-list .fname, pre, .an-table td:nth-child(2), #detail h3, .rid .pill, .an-sub, .edge-rule, .opt-lib, code');
+  const out = [];
+  const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let n;
+  while ((n = walk.nextNode())) {
+    const el = n.parentElement;
+    if (!el || !n.textContent.trim()) continue;
+    if (el.closest('[hidden], script, style')) continue;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height || getComputedStyle(el).visibility === 'hidden') continue;
+    if (skip(el)) continue;
+    const m = n.textContent.match(WORDS);
+    if (m) out.push(n.textContent.trim().slice(0, 80));
+  }
+  return [...new Set(out)].slice(0, 12);
+}"""
+
+
 def cells(path):
     from openpyxl import load_workbook
     return [[list(r) for r in ws.iter_rows(values_only=True)] for ws in load_workbook(path).worksheets]
@@ -77,7 +101,8 @@ async def run(tmp):
     errors = []
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        ctx = await browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True)
+        ctx = await browser.new_context(viewport={'width': 1440, 'height': 900}, accept_downloads=True,
+                                        locale='fr-FR')
         if LOCAL:
             await ctx.route('https://cdn.jsdelivr.net/**', local_cdn)
         page = await ctx.new_page()
@@ -96,9 +121,6 @@ async def run(tmp):
         await page.click('nav.tabs [data-view=catalogue]')
         count = await page.text_content('#cat-count')
         assert count.startswith('3 / 3'), count
-        await page.click('#view-catalogue .seg [data-lang=en]')
-        assert 'Adds up' in await page.inner_text('#cat-table') or 'Counts' in await page.inner_text('#cat-table')
-        await page.click('#view-catalogue .seg [data-lang=fr]')
 
         await page.click('#cat-table a[data-rule="1"]')
         await page.wait_for_function("document.querySelector('#detail .rt-human')", timeout=10000)
@@ -107,11 +129,56 @@ async def run(tmp):
         await page.click('nav.tabs [data-view=audit]')
         assert 'Audit du paramétrage' in await page.inner_text('#audit-body')
 
+        # ---- bascule en anglais : chaque onglet, aucun mot français visible
+        await page.click('#lang-switch [data-lang=en]')
+        assert await page.get_attribute('html', 'lang') == 'en'
+        assert await page.get_attribute('#lang-switch [data-lang=en]', 'aria-checked') == 'true'
+        tabs = await page.inner_text('nav.tabs')
+        assert 'Home' in tabs and 'Client dossier' in tabs, tabs
+        for view in ('accueil', 'catalogue', 'audit', 'dossier', 'explorer'):
+            await page.click('nav.tabs [data-view=%s]' % view)
+            await page.wait_for_timeout(150)
+            french = await page.evaluate(FRENCH_LEFT)
+            assert not french, 'français visible en anglais (%s) : %s' % (view, french)
+        assert 'What the rule calculates' in await page.inner_text('#detail')
+        await page.click('#btn-audit-side')
+        await page.wait_for_timeout(150)
+        french = await page.evaluate(FRENCH_LEFT)
+        assert not french, 'français visible dans l\'audit du graphe : %s' % french
+        await page.click('#an-close')
+        await page.click('nav.tabs [data-view=catalogue]')
+        assert 'What the rule calculates' in await page.inner_text('#cat-table thead')
+        body = await page.inner_text('#cat-table tbody')
+        assert 'Counts' in body or 'Adds up' in body or 'Calculates' in body, body[:300]
+
+        # la langue est mémorisée
+        await page.reload()
+        await page.wait_for_function("document.getElementById('engine-status').dataset.kind === 'ok'",
+                                     timeout=180000)
+        assert await page.get_attribute('html', 'lang') == 'en'
+        await page.set_input_files('#files-input', [rules, days])
+        await page.wait_for_function("!document.getElementById('env-summary').hidden", timeout=60000)
+
+        # le dossier suit la langue de l'interface
+        await page.click('nav.tabs [data-view=dossier]')
+        assert await page.input_value('#d-langue') == 'en'
+        await page.fill('#d-client', 'Client test')
+        async with page.expect_download(timeout=60000) as info:
+            await page.click('#d-generate')
+        download = await info.value
+        web_en = os.path.join(tmp, 'web_en.xlsx')
+        await download.save_as(web_en)
+        assert download.suggested_filename.startswith('GTA-configuration-dossier_Client-test_')
+
+        # retour au français
+        await page.click('#lang-switch [data-lang=fr]')
+        assert 'Accueil' in await page.inner_text('nav.tabs')
+        assert await page.input_value('#d-langue') == 'fr'
+
         await page.click('#btn-theme')
         await page.click('#btn-theme')
 
         await page.click('nav.tabs [data-view=dossier]')
-        await page.fill('#d-client', 'Client test')
         async with page.expect_download(timeout=60000) as info:
             await page.click('#d-generate')
         download = await info.value
@@ -124,6 +191,9 @@ async def run(tmp):
     cli = build_xlsx.build(rules, os.path.join(tmp, 'cli.xlsx'), days, 'Client test', None,
                            'contrats', 'fr')
     assert cells(web) == cells(cli), 'le dossier du navigateur diffère de la ligne de commande'
+    cli_en = build_xlsx.build(rules, os.path.join(tmp, 'cli_en.xlsx'), days, 'Client test', None,
+                              'contrats', 'en')
+    assert cells(web_en) == cells(cli_en), 'le dossier anglais du navigateur diffère de la ligne de commande'
     assert not errors, errors
 
 
@@ -132,6 +202,8 @@ if __name__ == '__main__':
         try:
             asyncio.run(run(tmp))
         except AssertionError as exc:
-            print('ÉCHEC — %s' % exc)
+            traceback.print_exc()
+            print("ÉCHEC — %s" % exc)
             sys.exit(1)
-    print('navigateur : parcours complet ok (accueil, catalogue FR/EN, explorer, audit, thème, dossier)')
+    print('navigateur : parcours complet ok (accueil, catalogue, explorer, audit, bascule FR/EN, '
+          'mémorisation de la langue, thème, dossier FR et EN)')
