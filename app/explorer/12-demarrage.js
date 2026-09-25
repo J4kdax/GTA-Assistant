@@ -150,6 +150,31 @@ const Explorer = {
     UI.renderDetail(typeof sel === 'number' ? STATE.byId.get(sel) : null);
   },
 
+  // Remise à zéro : le graphe et tous les panneaux reviennent à l'état initial.
+  clear() {
+    Analyse.close();
+    if (STATE.network) { STATE.network.destroy(); STATE.network = null; }
+    Object.assign(STATE, {
+      rules: [], byId: new Map(), edges: [], dayTypes: new Map(), typeColor: new Map(),
+      activeTypes: new Set(), activeAffect: '', selected: null, showDtLayer: false,
+      stabilized: false, nodeDS: null, edgeDS: null,
+    });
+    const affect = document.getElementById('filter-affect');
+    affect.innerHTML = `<option value="">${L('— Toutes les affectations —', '— All assignments —')}</option>`;
+    document.getElementById('search').value = '';
+    document.getElementById('search-results').innerHTML = '';
+    document.getElementById('toggle-dt-layer').checked = false;
+    document.getElementById('legend').innerHTML = '';
+    document.getElementById('legend-count').textContent = '0';
+    document.getElementById('stats').textContent = '';
+    UI.renderDayTypePanel();
+    UI.renderDetail(null);
+    BrokenRefs.render();
+    Optimizations.render();
+    const welcome = document.getElementById('welcome-overlay');
+    if (welcome) welcome.hidden = false;
+  },
+
   relabelEmpty() {
     THEME.set(THEME.current || 'light', { persist: false });
     UI.renderDetail(null);

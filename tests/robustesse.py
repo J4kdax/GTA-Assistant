@@ -185,6 +185,21 @@ def sortie_par_defaut(tmp):
 
 
 @case
+def balises_html_dans_les_libelles(tmp):
+    """Toute balise HTML est retirée des libellés, son texte gardé ; les vraies
+    comparaisons (« 00h < H < 08h ») ne sont pas prises pour des balises."""
+    rows = [r[:] for r in ROWS]
+    rows[0][3] = '<font color="red">Double</font> heures <sup>2</sup>&nbsp;x'
+    rows[0][4] = '<small>GEN</small><br>Credit<br>Jour Maire'
+    rows[1][4] = '00h < H < 08h [08]'
+    rows[2][4] = '<SMALL>GEN</SMALL> < 35 h'
+    got = {r[1]: (r[2], r[3]) for r in catalog_rows(build(tmp, write(tmp, 'tags.xlsx', frame(FR, rows))))}
+    assert got[1] == ('Double heures 2 x', 'GEN\nCredit\nJour Maire'), got[1]
+    assert got[2][1] == '00h < H < 08h [08]', got[2]
+    assert got[3][1] == 'GEN < 35 h', got[3]
+
+
+@case
 def repli_sans_handler(tmp):
     rows = {r[1]: r[5] for r in catalog_rows(build(tmp, write(tmp, 'u.xlsx', frame(FR))))}
     assert rows[3], 'la règle sans handler doit garder une description de repli'

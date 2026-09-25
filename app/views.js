@@ -18,34 +18,81 @@ const Views = {
 
 const en = () => I18N.lang === 'en';
 
-/* ---- Accueil : synthèse de l'environnement ---------------------------------- */
+/* ---- Accueil : synthèse de l'environnement et cartes des outils ------------- */
 const Summary = {
-  render(m) {
-    const d = m.diagnostic;
-    const findings = m.audit.a_corriger.length;
+  bound: false,
+
+  // Cartes des outils : aperçu animé au repos, vrais chiffres une fois chargé.
+  bind() {
+    this.bound = true;
+    // aperçus d'origine, restitués à la remise à zéro
+    this.pristine = {};
+    for (const id of ['pv-catalogue', 'pv-audit']) this.pristine[id] = document.getElementById(id).innerHTML;
+    document.querySelectorAll('.tool-card[data-go]').forEach(card =>
+      card.addEventListener('click', () => Shell.setView(card.dataset.go)));
+  },
+
+  idle() {
+    if (!this.bound) this.bind();
+    const hint = L('Disponible après dépôt des exports', 'Available once the exports are dropped');
+    document.querySelectorAll('.tool-stat').forEach(el => { el.textContent = hint; el.className = 'tool-stat idle'; });
+    for (const [id, html] of Object.entries(this.pristine)) {
+      const box = document.getElementById(id);
+      if (box.dataset.live) { box.innerHTML = html; delete box.dataset.live; I18N.apply(box); }
+    }
     const el = document.getElementById('env-summary');
+    el.hidden = true; el.innerHTML = '';
+    const badge = document.getElementById('audit-badge');
+    badge.hidden = true; badge.textContent = '';
+  },
+
+  render(m) {
+    if (!this.bound) this.bind();
+    const d = m.diagnostic;
+    const lang = I18N.lang;
+    const fixes = m.audit.a_corriger.length;
+    const edges = m.regles.reduce((n, r) => n + r.deps.length, 0);
+    const stat = (id, text, warn) => {
+      const el = document.getElementById(id);
+      el.textContent = text; el.className = 'tool-stat' + (warn ? ' warn' : '');
+    };
+    stat('stat-explorer', `${Ln(m.regles.length, 'règle', 'règles', 'rule', 'rules')} · ${Ln(edges, 'dépendance', 'dépendances', 'dependency', 'dependencies')}`);
+    const described = m.regles.length - m.regles.filter(r => r.repli).length;
+    stat('stat-catalogue', L(`${described} / ${m.regles.length} règles décrites en clair`, `${described} / ${m.regles.length} rules described in plain words`));
+    stat('stat-audit', fixes ? Ln(fixes, 'point à corriger', 'points à corriger', 'item to fix', 'items to fix')
+                             : L('Aucun point bloquant', 'Nothing blocking'), fixes > 0);
+    stat('stat-dossier', L(`Prêt · ${m.contrats.length} colonnes de contrat`, `Ready · ${m.contrats.length} contract columns`));
+
+    // Aperçus : les premières règles décrites, les constats principaux
+    const rows = m.regles.filter(r => !r.repli).slice(0, 4);
+    if (rows.length) {
+      document.getElementById('pv-catalogue').dataset.live = '1';
+      document.getElementById('pv-catalogue').innerHTML = rows.map((r, i) => `<div class="pv-row"><span class="n">#${r.id}</span><span class="l"></span><span class="d">${
+        i === 0 ? `<span class="pv-typing">${esc(r.description[lang])}</span>` : esc(r.description[lang])}</span></div>`).join('');
+    }
+    const findings = [...m.audit.a_corriger.map(f => ['e', f]), ...m.audit.a_savoir.map(f => ['w', f])].slice(0, 3);
+    const title = f => (lang === 'en' ? f.titre_en : f.titre);
+    document.getElementById('pv-audit').dataset.live = '1';
+    document.getElementById('pv-audit').innerHTML = findings.length
+      ? findings.map(([k, f]) => `<div class="pv-al ${k}"><span>${esc(title(f))}</span><b>${f.nombre}</b></div>`).join('')
+      : `<div class="pv-al o"><span>${L('Aucun constat', 'No finding')}</span><b>0</b></div>`;
+
     const tiles = [
       [m.regles.length, L('règles', 'rules')],
-      [d.types, L('types de règle', 'rule types')],
-      [m.contrats.length, L('types de contrat', 'contract types')],
+      [d.types, L('types', 'types')],
+      [m.contrats.length, L('contrats', 'contracts')],
       [d.compteurs, L('compteurs', 'counters')],
-      [m.types_jour.length || '—', L('types de jour', 'day types')],
+      [m.types_jour.length || '—', L('jours', 'days')],
     ];
-    const fmt = en() ? m.format_en : m.format;
+    const fmt = lang === 'en' ? m.format_en : m.format;
+    const el = document.getElementById('env-summary');
     el.innerHTML = `
       <div class="tiles">${tiles.map(([n, l]) => `<div class="tile"><b>${esc(n)}</b><span>${esc(l)}</span></div>`).join('')}</div>
-      <p class="muted">${L(`Export au format « ${esc(fmt)} »`, `Export in “${esc(fmt)}” format`)} · ${L('moteur', 'engine')} v${esc(m.moteur)}${
-        findings ? ` · <a href="#audit" class="warn-link">${esc(Ln(findings, 'point à corriger', 'points à corriger', 'item to fix', 'items to fix'))}</a>` : ''}</p>
-      <div class="btn-row">
-        <button data-go="explorer">${L('Explorer le graphe', 'Explore the graph')}</button>
-        <button data-go="catalogue">${L('Lire le catalogue', 'Read the catalogue')}</button>
-        <button data-go="audit">${L("Voir l'audit", 'See the audit')}</button>
-        <button data-go="dossier" class="primary">${L('Produire le dossier client', 'Produce the client dossier')}</button>
-      </div>`;
+      <p class="muted">${L(`Export « ${esc(fmt)} »`, `“${esc(fmt)}” export`)} · ${L('moteur', 'engine')} v${esc(m.moteur)}${
+        fixes ? ` · <a href="#audit" class="warn-link">${esc(Ln(fixes, 'point à corriger', 'points à corriger', 'item to fix', 'items to fix'))}</a>` : ''}</p>`;
     el.hidden = false;
-    el.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => Shell.setView(b.dataset.go)));
     const badge = document.getElementById('audit-badge');
-    badge.hidden = !findings; badge.textContent = findings;
+    badge.hidden = !fixes; badge.textContent = fixes;
   },
 };
 
@@ -138,7 +185,7 @@ const Audit = {
     document.getElementById('audit-body').innerHTML = `
       <h2>${L('Audit du paramétrage', 'Configuration audit')}</h2>
       <p class="muted">${L('Ce qui est à corriger dans le paramétrage, puis ce qui est à savoir avant de livrer le dossier au client.',
-                           'What needs fixing in the configuration, then what to know before handing the dossier over to the client.')}</p>
+                           'What needs fixing in the configuration, then what to know before handing the file over to the client.')}</p>
       ${block(L('À corriger', 'To fix'), 'err', m.audit.a_corriger) ||
         `<div class="finding ok"><b>${L('Aucun point bloquant', 'Nothing blocking')}</b><p class="muted">${
           L('Pas de renvoi cassé ni de référence incomplète.', 'No broken or incomplete rule reference.')}</p></div>`}
@@ -147,7 +194,7 @@ const Audit = {
         <table class="grid small"><thead><tr><th>${L('Référentiel', 'Reference data')}</th><th class="c">${L('Occurrences', 'Occurrences')}</th><th class="c">${L('Règles', 'Rules')}</th><th>${L('Export à demander', 'Export to request')}</th></tr></thead>
         <tbody>${refs.map(r => `<tr><td>${esc(r.libelle[lang])}</td><td class="c">${r.occurrences}</td><td class="c">${r.regles}</td><td>${esc(r.demande[lang])}</td></tr>`).join('')}</tbody></table>
         <p class="muted">${L('Sans eux, les éléments concernés restent notés ‹ entre chevrons › : le dossier reste exploitable.',
-                             'Without them, the items concerned stay ‹ in angle brackets ›: the dossier remains usable.')}</p>` : ''}
+                             'Without them, the items concerned stay ‹ in angle brackets ›: the file remains usable.')}</p>` : ''}
       <details class="fold-plain"><summary>${L('Relevé complet du diagnostic', 'Full diagnostic report')}</summary><pre>${
         esc(en() ? m.diagnostic_texte_en : m.diagnostic_texte)}</pre></details>`;
     if (!this.bound) this.bind();
@@ -211,7 +258,7 @@ const Dossier = {
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
         const name = a.download;
         this.status(() => L(`Dossier téléchargé (${name}). Relisez l'audit avant de le transmettre.`,
-                            `Dossier downloaded (${name}). Review the audit before sending it.`), 'ok');
+                            `File downloaded (${name}). Review the audit before sending it.`), 'ok');
       } catch (err) {
         this.status(() => L('Génération impossible : ', 'Generation failed: ') + err.message, 'err');
       } finally { btn.disabled = false; }

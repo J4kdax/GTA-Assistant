@@ -28,7 +28,8 @@ message clair (`ExportError`), jamais une trace Python : trois habillages de col
 vide, valeurs vides, cases Compteur en texte, lignes sans identifiant, doublons, feuille de notes
 en tête, panne simulée du traducteur, export de types de jour illisible, échantillon hors
 fichier, sortie par défaut, mauvais fichier, colonne absente, fichier absent ou non Excel, et
-alignement du Lisez-moi sur les colonnes du catalogue. Attendu : 16 cas, 0 échec (9 échouaient
+balises HTML dans les libellés (`<small>`, `<font>`…) sans toucher aux comparaisons « < »,
+alignement du Lisez-moi sur les colonnes du catalogue. Attendu : 17 cas, 0 échec (9 échouaient
 en v1.8).
 
 ## 4. Contrat du modèle d'environnement

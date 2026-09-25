@@ -14,7 +14,13 @@ from tables import Table, is_missing, read_sheets
 # détruirait silencieusement.
 
 _BR = re.compile(r'<\s*br\s*/?\s*>', re.I)
-_TAG = re.compile(r'</?\s*(b|i|u|strong|em|span|div|p)\b[^>]*>', re.I)
+# Toute balise HTML connue est retirée, son texte gardé (<small>GEN</small> -> GEN).
+# On s'en tient aux noms d'éléments HTML, sans jamais traverser un autre « < » :
+# les libellés contiennent de vraies comparaisons (« 00h < H < 08h ») à conserver.
+_HTML_TAGS = ('a|abbr|b|big|blockquote|center|cite|code|del|div|em|font|h[1-6]|hr|i|ins|'
+              'label|li|mark|ol|p|pre|q|s|small|span|strike|strong|sub|sup|table|tbody|td|'
+              'th|thead|tr|tt|u|ul')
+_TAG = re.compile(r'<\s*/?\s*(?:%s)\b[^<>]*>' % _HTML_TAGS, re.I)
 
 
 def clean_label(value, inline=False):
@@ -28,7 +34,7 @@ def clean_label(value, inline=False):
     s = str(value)
     s = _BR.sub(' ' if inline else '\n', s)
     s = _TAG.sub('', s)
-    s = html.unescape(s)
+    s = html.unescape(s).replace('\xa0', ' ')
     s = re.sub(r'[ \t]+', ' ', s)
     s = re.sub(r'\n{2,}', '\n', s)
     return s.strip()

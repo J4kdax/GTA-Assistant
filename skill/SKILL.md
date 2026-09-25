@@ -97,7 +97,7 @@ d'un client à l'autre au lieu de se réinventer.
 - Le jeu de test de référence donne-t-il toujours ses 4 fragments non traduits, pas davantage ?
 - `tests/jeu_reduit.py` sort-il ses 20 descriptions (10 règles × 2 langues), dont exactement
   deux replis (#9002, tranche illisible volontaire, en français et en anglais) ?
-- `tests/robustesse.py` passe-t-il ses 16 cas sans échec, et `tests/modele.py` ses 6 contrôles ?
+- `tests/robustesse.py` passe-t-il ses 17 cas sans échec, et `tests/modele.py` ses 6 contrôles ?
 - Après toute modification de l'interface ou du moteur : `tests/navigateur.py` (Chromium) fait le
   parcours complet de l'Atelier et vérifie que le dossier téléchargé est identique, cellule par
   cellule, à celui de la ligne de commande.
@@ -121,7 +121,7 @@ Un export abîmé ne doit jamais produire une trace Python. Deux issues seulemen
   place des règles est reconnu et nommé), colonne obligatoire absente. En ligne de commande :
   `ERREUR — …`, code de sortie 2.
 
-`tests/robustesse.py` fabrique ces exports à la volée (aucune donnée client) : 16 cas, dont 9
+`tests/robustesse.py` fabrique ces exports à la volée (aucune donnée client) : 17 cas, dont 9
 faisaient planter la v1.8. Tout nouveau défaut d'export rencontré chez un client devient un cas.
 
 ## Moteur unique et Atelier (depuis v2.0)
@@ -342,7 +342,10 @@ dans un handler.
    besoin métier est de l'invention.
 5. **Nettoyage HTML strictement limité aux colonnes de libellé.** Les `<br>` du `Libellé court`
    (210 cas sur le jeu de test) deviennent de vrais retours à la ligne — ils reproduisent
-   l'affichage écran de #Dièse, qui est le repère du lecteur. Les `<b>` sont retirés. **Ne
+   l'affichage écran de #Dièse, qui est le repère du lecteur. Toute autre balise HTML (`<b>`,
+   `<small>`, `<font>`, `<sup>`…) est retirée et son texte gardé : `<small>GEN</small>` → « GEN »
+   (v2.1.1 ; avant, seule une liste fermée de balises l'était). Le nettoyeur ne reconnaît que des
+   noms d'éléments HTML et ne traverse jamais un autre `<` : « 00h < H < 08h » reste intact. **Ne
    jamais appliquer de nettoyeur de balises à la colonne `Paramètres`** : les formules
    contiennent des `<` et `>` de comparaison qu'un tel nettoyage détruit silencieusement
    (`<4)|4||if(rule31>` est un fragment de formule valide, pas une balise). Quand un libellé est
@@ -484,6 +487,15 @@ référencées, ni affectées (8 cas) sont en revanche de vraies règles mortes 
 remonter au client, jamais un motif de les masquer du dossier.
 
 ## Versions
+
+- **v2.2** — Atelier : page d'accueil refaite (quatre cartes d'outils animées, chiffres réels de
+  l'environnement), bouton de remise à zéro avec confirmation, « Client file » en anglais.
+  Moteur et classeurs inchangés.
+
+- **v2.1.1** — toute balise HTML des libellés est retirée (texte gardé) : `<small>`, `<font>`,
+  `<sup>`… restaient visibles dans le Libellé court du classeur. Comparaisons « < » des libellés
+  préservées. Cas ajouté à `tests/robustesse.py` (17 cas). Classeurs inchangés quand les
+  libellés ne contiennent que `<br>` / `<b>` (vérifié sur La Villette).
 
 - **v2.1** — interface de l'Atelier en français et en anglais (slider FR | EN, langue
   mémorisée, dossier client qui suit la langue de l'interface). Le modèle fournit en anglais

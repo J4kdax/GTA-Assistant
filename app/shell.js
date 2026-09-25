@@ -7,7 +7,7 @@
 "use strict";
 
 const Shell = {
-  VERSION: '2.1',
+  VERSION: '2.2',
   get lang() { return I18N.lang; },   // langue de l'interface (slider FR | EN)
   files: [],               // File[] déposés
   tri: null,               // classement des fichiers par le moteur
@@ -23,6 +23,8 @@ const Shell = {
     I18N.bindSwitch();
     I18N.onChange(() => this.relabel());
     document.getElementById('d-langue').value = I18N.lang;
+    Summary.idle();
+    this.bindClear();
     this.bindTabs();
     this.bindFiles();
     this.loadSpecs();
@@ -76,6 +78,11 @@ const Shell = {
     document.querySelectorAll('nav.tabs [role=tab]').forEach(b => {
       if (b.dataset.view !== 'accueil') b.disabled = !on;
     });
+    document.querySelectorAll('.tool-card[data-go]').forEach(c => {
+      c.disabled = !on || (c.dataset.go === 'explorer' && !this.explorerOk);
+    });
+    document.getElementById('app').classList.toggle('loaded', !!on);
+    document.getElementById('btn-clear-env').disabled = !on && !this.files.length;
     const ex = document.querySelector('nav.tabs [data-view="explorer"]');
     if (!this.explorerOk) {
       ex.disabled = true;
@@ -116,6 +123,45 @@ const Shell = {
     });
   },
 
+  // ---- remise à zéro : vider l'environnement pour en charger un autre ---------
+  bindClear() {
+    const modal = document.getElementById('confirm-clear');
+    const ok = document.getElementById('confirm-ok');
+    const close = () => { modal.hidden = true; document.getElementById('btn-clear-env').focus(); };
+    document.getElementById('btn-clear-env').addEventListener('click', () => {
+      modal.hidden = false;
+      document.getElementById('confirm-cancel').focus();
+    });
+    document.getElementById('confirm-cancel').addEventListener('click', close);
+    ok.addEventListener('click', () => { modal.hidden = true; this.clear(); });
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    modal.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { e.preventDefault(); close(); }
+      if (e.key === 'Tab') {                      // le focus reste dans la fenêtre
+        const f = [document.getElementById('confirm-cancel'), ok];
+        const i = f.indexOf(document.activeElement);
+        e.preventDefault(); f[(i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+      }
+    });
+  },
+
+  clear() {
+    this.gen = (this.gen || 0) + 1;              // une analyse en cours sera ignorée
+    this.files = []; this.tri = null; this.model = null; this.entries = null;
+    document.getElementById('file-list').innerHTML = '';
+    ['cat-search', 'd-client'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('cat-counters').checked = false;
+    Dossier.msg = null;
+    const st = document.getElementById('dossier-status'); st.textContent = ''; st.dataset.kind = '';
+    document.getElementById('d-langue').value = I18N.lang;
+    if (typeof Explorer !== 'undefined') Explorer.clear();
+    Summary.idle();
+    this.enableTabs(false);
+    this.setView('accueil');
+    this.status(() => L('Environnement vidé — déposez les exports d\'un autre client.',
+                        'Environment cleared — drop another client\'s exports.'), 'ok');
+  },
+
   pickFiles() { document.getElementById('files-input').click(); },
 
   addFiles(list) {
@@ -128,6 +174,7 @@ const Shell = {
       }
     }
     if (!added) return;
+    document.getElementById('btn-clear-env').disabled = false;
     this.paintFiles(() => this.files.map(f => ({ name: f.name, role: L('en attente', 'waiting'), cls: '' })));
     if (this.engineReady) this.refresh();
     else this.status(() => L('Les fichiers seront analysés dès que le moteur sera prêt…',
@@ -149,9 +196,12 @@ const Shell = {
   },
 
   async refresh() {
+    const gen = this.gen = (this.gen || 0) + 1;
+    const stale = () => gen !== this.gen;
     try {
       this.status(() => L('Identification des fichiers…', 'Identifying the files…'));
       const tri = await Engine.load(this.files);
+      if (stale()) return;
       this.paintFiles(() => Shell.fileEntries(tri));
       this.tri = tri;
       if (!tri.regles) {
@@ -162,11 +212,13 @@ const Shell = {
       this.status(() => L('Analyse du paramétrage…', 'Analysing the configuration…'));
       const t0 = performance.now();
       const model = await Engine.analyse(tri);
+      if (stale()) return;
       this.setModel(model);
       const secs = ((performance.now() - t0) / 1000).toFixed(1);
       this.status(() => L(`Environnement analysé en ${secs.replace('.', ',')} s.`,
                           `Environment analysed in ${secs} s.`), 'ok');
     } catch (err) {
+      if (stale()) return;
       this.status(() => L('Analyse impossible : ', 'Analysis failed: ') + err.message, 'err');
     }
   },
@@ -236,8 +288,9 @@ const Shell = {
     if (this.model) {
       Views.render(this.model);
       if (this.explorerOk) Explorer.relabel(this.model);
-    } else if (typeof Explorer !== 'undefined' && Explorer.relabelEmpty) {
-      Explorer.relabelEmpty();
+    } else {
+      Summary.idle();
+      if (typeof Explorer !== 'undefined' && Explorer.relabelEmpty) Explorer.relabelEmpty();
     }
   },
 };

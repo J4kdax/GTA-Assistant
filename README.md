@@ -23,11 +23,14 @@ langue d'origine, pour qu'on les retrouve à l'identique dans #Dièse.
 
 | Onglet | Ce qu'il fait |
 |---|---|
-| Accueil | Dépôt des exports en vrac, reconnus à leurs colonnes ; synthèse de l'environnement |
+| Accueil | Dépôt des exports en vrac, reconnus à leurs colonnes ; quatre cartes d'outils qui affichent les chiffres de l'environnement et y mènent |
 | Explorer | Graphe des dépendances entre règles (ex-Cartographe), avec la phrase en clair de chaque règle dans le panneau de détail |
 | Catalogue | Le contenu du dossier client à l'écran, filtrable par type de contrat et par compteur, en français ou en anglais ; un clic sur le # ouvre la règle dans le graphe |
 | Audit | Constats à corriger et à savoir, référentiels à réclamer, et les analyses détaillées du graphe |
 | Dossier client | Le classeur Excel (Lisez-moi, catalogue, lexique des types de jour), en français ou en anglais |
+
+Le bouton **Réinitialiser** de l'en-tête vide l'environnement, après confirmation, pour charger
+celui d'un autre client.
 
 Entrées acceptées :
 

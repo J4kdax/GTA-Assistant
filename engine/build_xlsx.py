@@ -21,7 +21,7 @@ from dossier_common import (ExportError, _as_int, load_rules, load_daytypes, eff
                             load_daytype_details, daytype_usage)
 from humanizer import Resolver, FormulaTranslator, describe, HANDLERS
 
-VERSION = '2.1'
+VERSION = '2.2'
 FONT = 'Arial'
 RED = 'B3202C'          # rouge IT4culture : bandeaux et en-têtes
 RED_DARK = '7E1620'     # rouge sombre : titres de section

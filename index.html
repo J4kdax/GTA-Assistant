@@ -10,7 +10,7 @@
     document.documentElement.setAttribute('data-theme', _t === 'dark' ? 'dark' : 'light');
   } catch (_) { document.documentElement.setAttribute('data-theme', 'light'); }
 </script>
-<title>Atelier GTA #Dièse — v2.1</title>
+<title>Atelier GTA #Dièse — v2.2</title>
 <meta name="description" content="Cartographie, audit, catalogue et dossier de paramétrage GTA #Dièse, dans le navigateur.">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAMFBMVEW8FiEAAADFHyrQXGS1CSPim5/67u/9AAC7FyK6FyJ/AADHOkPZfIPsvcH/AGPDGCTDdLDGAAAAEHRSTlP9AP7+D/7+AqBfAv///wJwpYcBKwAABFFJREFUeNp1lV1oFFcUx39zZ3ezq8V4d9euVZJONilNUraOmUbT9sVtHyzYBxtbLII1kCKtUEko7Zs1kUIjVGgNFBEK8aPQx6CEBvppwVZD1h1aiGJJXIsxW8xmRhsVrbvTh7ubTdbNPF2G35z/Ofc/5xxNAsDgqTGqPposnazdPdUAPQSAPRFNjW76aHRZ4MJLX/fPp34yt9rLSOhzGFOHR+2A2TpULULAu+s5YjLdfzs1selGNQl/1MVzxOTlgdlxvX36MUAInwt4Tv35KwM/Tg/mpitz2JDJFF/EC9nPD2AlhpYApvZTOWi88P73KboTPYsk1r7xXRlw7kzmevNnijUr4DXt50V5ec6dybH+2+kJc6sNUkoZi4rK+xFxDidldKtUEfwRtwJQNedSKkndF8xU8SnOzdlGJcFI2w7/L2/5t5/XO9sbd4y07fCbnUC8JaqHgCPuDxtWatNPaMYf4ul1Ul6sjWhmMA2Ou0oPAdnOc7PBc4Vsuu7qpbqrNyOpezXnHv0zA6LwrkrfBWqATA1w/z6fUKPS6LP1EHBrpMlcmU/UCTMmjHUyLO1I3lybBm17UAABOJjOpW0nnXNSTvrS3J5rOSfnAvXDaBJ0f42eX38hYQMY+jXzUqnQZuehHgIhfGu+vSYU8HqsJe46RWDNvCeA3c18tudjR13m5Zmp/VOlCP8BUsrkK+hGmz4MgNGIuWCILyYFwBYs6wVLAZZ1vt0oEQdaEUBXH/R4rpLI9OwvLLixGlBm67Tp6jtDL0uQ7JV6CN0Xcds7mkS7DfDqcyusuaL5Ru8AAvIegNdXlKBQUwoQ/FBJ9BjLSLREpdRDHBm1ae9oFM9cATj7b1nCXfUIAUOd5ZThi0X/ZX4nIOX1Q1SXEP1JKX1gzYFVF/70eAYgsmnyRTdTjinQqQfQ+pSEgXhQjFA/bAIy+pShJIYrJZpjUkofugdY/tZ51a6RJ/NmccxoeUCwqxlgrbZaSbQYR4VRNhtk8iigG226WWG38MWklEL90mfCDXH13frw2cay2SAw+4D+ExGpJNY1nAwbi25Or7XvAsFv3LSXBbiX/c27rPr3gWmDyPsNQISN4gQIhxsaimbvHQIEHoDcGNmocms80VaUCH4AIPS3AZxULq2qn9wzcU/dtKZq2WUvHQ193C+e/goACLsTQFoliVMnrBVG2WwEroHqza6ixDtzmWJnA9C7hbhRbVGIL5NSSomU0WNVESPZq4DTvTJ6TDyONMeklFJqklBrCuvNfcbUUqDlVn5hVodaU3RsPrQUaXLzC7P60cxe/eLFLdt+bXDKOd72L9163X+OhTZsPkkpijjYZS7aOJCe/ur6+Pjz2/6uVV2jbR/ILgFgJNudHx8/cDpe6wLeg67RpYsVIJBIDAX634sXMhg7j/M4oJDB+X1GITibrwpAKDFGd9O+Z+ceLgNAIJGi4+XB5QHonvi9YrFWPOkbgzNZdfwfRLlwaC7A1R0AAAAASUVORK5CYII=">
 <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
@@ -22,13 +22,13 @@
 <div id="app" data-view="accueil">
   <header>
     <span class="brand" id="brand" title="it4culture"></span>
-    <h1>Atelier GTA <span class="v" id="version-label">#Dièse · v2.1</span></h1>
+    <h1>Atelier GTA <span class="v" id="version-label">#Dièse · v2.2</span></h1>
     <nav class="tabs" role="tablist" aria-label="Outils" data-en-aria="Tools">
       <button role="tab" data-view="accueil" aria-selected="true"><span data-en="Home">Accueil</span></button>
       <button role="tab" data-view="explorer" disabled>Explorer</button>
       <button role="tab" data-view="catalogue" disabled>Catalogue</button>
       <button role="tab" data-view="audit" disabled><span data-en="Audit">Audit</span> <span class="tab-badge" id="audit-badge" hidden></span></button>
-      <button role="tab" data-view="dossier" disabled><span data-en="Client dossier">Dossier client</span></button>
+      <button role="tab" data-view="dossier" disabled><span data-en="Client file">Dossier client</span></button>
     </nav>
     <span class="stats explorer-only" id="stats"></span>
     <div id="indicator-anom" class="hdr-indicator explorer-only" title="Cliquez pour détailler les appels vers des règles inexistantes" data-en-title="Click for details of references to rules that do not exist">
@@ -51,6 +51,7 @@
         <button type="button" role="radio" data-lang="fr" lang="fr" title="Interface en français" aria-checked="true">FR</button>
         <button type="button" role="radio" data-lang="en" lang="en" title="Interface in English" aria-checked="false">EN</button>
       </div>
+      <button id="btn-clear-env" class="ghost" disabled title="Vider l'environnement pour en charger un autre" data-en-title="Clear the environment to load another one" data-en="Reset">Réinitialiser</button>
       <button id="btn-add-files" class="primary" title="Déposer les exports #Dièse : règles, types de jour, référentiels" data-en-title="Drop the #Dièse exports: rules, day types, reference data" data-en="Drop exports…">Déposer des exports…</button>
       <input type="file" id="files-input" accept=".xlsx,.csv,.tsv" multiple hidden>
       <button id="btn-theme" title="Passer en thème sombre" aria-label="Passer en thème sombre">&#9790;</button>
@@ -109,7 +110,7 @@
       <button id="btn-audit" class="ghost" title="Audit du graphe : références cassées, cycles, règles jamais affectées, complexité" data-en-title="Graph audit: broken references, cycles, rules never assigned, complexity" data-en="Graph audit">Audit du graphe</button>
       <button id="btn-relayout" title="Recalcule la disposition une fois (puis fige)" data-en-title="Recompute the layout once (then freeze it)" data-en="Re-layout">Réorganiser</button>
       <button id="btn-fit" title="Recadrer la vue" data-en-title="Fit the view" data-en="Fit">Recadrer</button>
-      <button id="btn-reset" title="Effacer la sélection et les filtres" data-en-title="Clear the selection and filters" class="ghost">Reset</button>
+      <button id="btn-reset" title="Effacer la sélection et les filtres" data-en-title="Clear the selection and filters" class="ghost" data-en="Deselect">Désélectionner</button>
     </div>
     <div id="drop-overlay" data-en="Drop an Excel file (rules or day types)">Déposez un Excel (règles ou types de jour)</div>
     <div id="load-error">
@@ -147,21 +148,69 @@
 
   <!-- Vues de l'Atelier, posées au-dessus de l'Explorer (qui garde ainsi sa taille réelle) -->
   <main id="views">
-    <section id="view-accueil" class="view" data-view="accueil">
-      <div class="view-inner narrow">
-        <div class="hero">
-          <h2 data-en="One environment, every GTA tool">Un environnement, tous les outils GTA</h2>
-          <p data-en="Drop the client's #Dièse exports. The Atelier reads them once and builds the rule graph, the audit, the plain-language catalogue and the configuration dossier to hand over to the client.">Déposez les exports #Dièse du client. L'Atelier les lit une seule fois et en tire le graphe des règles, l'audit, le catalogue en langage clair et le dossier de paramétrage à remettre au client.</p>
+    <section id="view-accueil" class="view home" data-view="accueil">
+      <div class="home-grid">
+        <div class="home-left">
+          <h1 class="home-title" data-en-html="One #Dièse export.<br>Four tools.">Un export #Dièse.<br>Quatre outils.</h1>
+          <p class="home-lead" data-en="Drop the client's files: everything opens in a few seconds.">Déposez les fichiers du client : tout s'ouvre en quelques secondes.</p>
+          <div id="dropzone" class="dropzone home-drop" tabindex="0" role="button" aria-label="Déposer des exports" data-en-aria="Drop exports">
+            <div class="drop-files" aria-hidden="true">
+              <span class="drop-file f1" data-en="DAYS">JOURS</span>
+              <span class="drop-file f2" data-en="RULES">RÈGLES</span>
+              <span class="drop-file f3" data-en="RATES">TAUX</span>
+            </div>
+            <div class="dz-title" data-en="Drag the exports here">Glissez les exports ici</div>
+            <div class="dz-sub" data-en="or click to choose them — each file is recognised by its columns">ou cliquez pour les choisir — chaque fichier est reconnu à ses colonnes</div>
+          </div>
+          <div id="engine-status" class="engine-status" aria-live="polite">Démarrage du moteur…</div>
+          <ul id="file-list" class="file-list"></ul>
+          <ol class="home-steps" id="home-steps">
+            <li><i>1</i><span data-en="Drop the “GTA rules” export">Déposez l'export « Règles GTA »</span></li>
+            <li><i>2</i><span data-en="Add the day types for plain names">Ajoutez les types de jour pour des noms en clair</span></li>
+            <li><i>3</i><span data-en="Explore, audit, deliver">Explorez, auditez, livrez</span></li>
+          </ol>
+          <div id="env-summary" class="env-summary" hidden></div>
+          <p class="privacy"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><span data-en="No file is sent to a server.">Aucun fichier n'est envoyé à un serveur.</span></p>
         </div>
-        <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Déposer des exports" data-en-aria="Drop exports">
-          <div class="dz-title" data-en="Drop the exports here, all at once">Déposez ici les exports, en vrac</div>
-          <div class="dz-sub" data-en="GTA rules (required) · Day types (recommended) · Reference data: rates, jobs, activity types…">Règles GTA (obligatoire) · Types de jour (recommandé) · Référentiels : taux, fonctions, types d'activité…</div>
-          <div class="dz-sub" data-en="Each file is recognised by its columns, not by its name.">Chaque fichier est reconnu à ses colonnes, pas à son nom.</div>
+
+        <div class="home-tools">
+          <button type="button" class="tool-card" data-go="explorer" disabled>
+            <div class="tool-pv" aria-hidden="true"><svg viewBox="0 0 300 132" preserveAspectRatio="xMidYMid meet">
+              <line class="pv-edge" x1="50" y1="30" x2="140" y2="66"/><line class="pv-edge hot" x1="140" y1="66" x2="240" y2="36"/>
+              <line class="pv-edge" x1="140" y1="66" x2="210" y2="106"/><line class="pv-edge hot" x1="70" y1="102" x2="140" y2="66"/>
+              <line class="pv-edge" x1="240" y1="36" x2="270" y2="90"/>
+              <circle class="pv-node" cx="140" cy="66" r="9"/>
+              <circle cx="50" cy="30" r="6" class="c1"/><circle cx="240" cy="36" r="7" class="c2"/>
+              <circle cx="210" cy="106" r="6" class="c3"/><circle cx="70" cy="102" r="6" class="c4"/><circle cx="270" cy="90" r="5" class="c5"/>
+            </svg></div>
+            <div class="tool-tx"><b>Explorer</b><span data-en="The graph of dependencies between rules.">Le graphe des dépendances entre règles.</span><em class="tool-stat" id="stat-explorer"></em></div>
+          </button>
+          <button type="button" class="tool-card" data-go="catalogue" disabled>
+            <div class="tool-pv" aria-hidden="true"><div class="pv-rows" id="pv-catalogue">
+              <div class="pv-row"><span class="n">#12</span><span class="l"></span><span class="d"><span class="pv-typing" data-en="Counts night hours between 22:00 and 06:00…">Compte les heures de nuit entre 22:00 et 06:00…</span></span></div>
+              <div class="pv-row"><span class="n">#27</span><span class="l"></span><span class="d" data-en="Adds up the hours worked on public holidays…">Additionne les heures effectuées les jours fériés…</span></div>
+              <div class="pv-row"><span class="n">#31</span><span class="l"></span><span class="d" data-en="Equals 1 when “Night hours (#12)” is above 0…">Vaut 1 lorsque « Heures nuit (#12) » est supérieur à 0…</span></div>
+              <div class="pv-row"><span class="n">#44</span><span class="l"></span><span class="d" data-en="Adds up “Base hours (#3)” over the week…">Cumule « Heures base (#3) » sur la semaine…</span></div>
+            </div></div>
+            <div class="tool-tx"><b>Catalogue</b><span data-en="Every rule explained in plain language.">Chaque règle expliquée en langage clair.</span><em class="tool-stat" id="stat-catalogue"></em></div>
+          </button>
+          <button type="button" class="tool-card" data-go="audit" disabled>
+            <div class="tool-pv" aria-hidden="true"><div class="pv-alerts" id="pv-audit">
+              <div class="pv-al e"><span data-en="Broken references">Renvois cassés</span><b>2</b></div>
+              <div class="pv-al w"><span data-en="Unassigned rules">Règles sans affectation</span><b>15</b></div>
+              <div class="pv-al o"><span data-en="Dependency cycles">Cycles de dépendances</span><b>0</b></div>
+            </div></div>
+            <div class="tool-tx"><b>Audit</b><span data-en="What is wrong, before delivery.">Ce qui cloche, avant de livrer.</span><em class="tool-stat" id="stat-audit"></em></div>
+          </button>
+          <button type="button" class="tool-card" data-go="dossier" disabled>
+            <div class="tool-pv" aria-hidden="true"><div class="pv-xl">
+              <div class="bar" data-en="GTA CONFIGURATION FILE">DOSSIER DE PARAMÉTRAGE GTA</div>
+              <div class="cells"><i></i><i class="x"></i><i></i><i></i><i class="x"></i><i></i><i></i><i class="x"></i><i></i><i></i><i class="x"></i><i></i><i></i><i></i><i class="x"></i></div>
+              <span class="fl">FR · EN</span>
+            </div></div>
+            <div class="tool-tx"><b data-en="Client file">Dossier client</b><span data-en="The Excel workbook to hand over to the client.">Le classeur Excel à remettre au client.</span><em class="tool-stat" id="stat-dossier"></em></div>
+          </button>
         </div>
-        <div id="engine-status" class="engine-status" aria-live="polite">Démarrage du moteur…</div>
-        <ul id="file-list" class="file-list"></ul>
-        <div id="env-summary" class="env-summary" hidden></div>
-        <p class="privacy" data-en="Everything runs in your browser. No file is sent to a server.">Tout s'exécute dans votre navigateur. Aucun fichier n'est envoyé à un serveur.</p>
       </div>
     </section>
 
@@ -195,21 +244,33 @@
 
     <section id="view-dossier" class="view" data-view="dossier" hidden>
       <div class="view-inner narrow">
-        <h2 data-en="Configuration dossier">Dossier de paramétrage</h2>
+        <h2 data-en="Configuration file">Dossier de paramétrage</h2>
         <p class="muted" data-en="The Excel workbook handed over to the client: a Read me, the catalogue of rules in execution order with a plain-language explanation, and the day type glossary.">Le classeur Excel remis au client : un Lisez-moi, le catalogue des règles dans leur ordre d'exécution avec une explication en langage clair, et le lexique des types de jour.</p>
         <form id="dossier-form" class="form">
           <label><span data-en="Client name">Nom du client</span><input id="d-client" class="field" type="text" placeholder="Opéra de …" autocomplete="off"></label>
-          <label><span data-en="Dossier language">Langue du dossier</span>
+          <label><span data-en="File language">Langue du dossier</span>
             <select id="d-langue"><option value="fr" data-en="French">Français</option><option value="en" data-en="English">Anglais</option></select>
           </label>
           <label class="toggle"><input type="checkbox" id="d-contrats" checked> <span data-en="One column per contract type">Une colonne par type de contrat</span></label>
-          <button type="submit" class="primary" id="d-generate" data-en="Download the dossier (.xlsx)">Télécharger le dossier (.xlsx)</button>
+          <button type="submit" class="primary" id="d-generate" data-en="Download the file (.xlsx)">Télécharger le dossier (.xlsx)</button>
         </form>
         <div id="dossier-refs"></div>
         <div id="dossier-status" class="engine-status" aria-live="polite"></div>
       </div>
     </section>
   </main>
+</div>
+
+<!-- Confirmation de remise à zéro -->
+<div id="confirm-clear" class="an-modal" hidden role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="an-dialog confirm-dialog">
+    <h2 id="confirm-title" data-en="Clear the environment?">Vider l'environnement ?</h2>
+    <p data-en="The files dropped, the graph, the catalogue and the audit will be cleared so you can load another client's exports. Nothing is deleted from your computer.">Les fichiers déposés, le graphe, le catalogue et l'audit seront effacés pour charger les exports d'un autre client. Rien n'est supprimé de votre ordinateur.</p>
+    <div class="confirm-actions">
+      <button type="button" id="confirm-cancel" class="ghost" data-en="Cancel">Annuler</button>
+      <button type="button" id="confirm-ok" class="danger" data-en="Clear">Vider</button>
+    </div>
+  </div>
 </div>
 
 <div id="global-drop" class="global-drop" data-en="Drop the exports to add them to the environment">Déposez les exports pour les ajouter à l'environnement</div>

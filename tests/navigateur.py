@@ -134,7 +134,7 @@ async def run(tmp):
         assert await page.get_attribute('html', 'lang') == 'en'
         assert await page.get_attribute('#lang-switch [data-lang=en]', 'aria-checked') == 'true'
         tabs = await page.inner_text('nav.tabs')
-        assert 'Home' in tabs and 'Client dossier' in tabs, tabs
+        assert 'Home' in tabs and 'Client file' in tabs, tabs
         for view in ('accueil', 'catalogue', 'audit', 'dossier', 'explorer'):
             await page.click('nav.tabs [data-view=%s]' % view)
             await page.wait_for_timeout(150)
@@ -185,6 +185,38 @@ async def run(tmp):
         web = os.path.join(tmp, 'web.xlsx')
         await download.save_as(web)
         assert download.suggested_filename.startswith('Dossier-parametrage-GTA_Client-test_')
+
+        # ---- accueil : les cartes d'outils portent les vrais chiffres et y mènent
+        await page.click('nav.tabs [data-view=accueil]')
+        assert '3' in await page.text_content('#stat-explorer')
+        await page.click('.tool-card[data-go=catalogue]')
+        assert await page.get_attribute('#app', 'data-view') == 'catalogue'
+
+        # ---- remise à zéro : confirmation, annulation, puis vidage et nouvel environnement
+        await page.click('#btn-clear-env')
+        assert not await page.is_hidden('#confirm-clear')
+        await page.click('#confirm-cancel')
+        assert await page.is_hidden('#confirm-clear')
+        assert (await page.text_content('#cat-count')).startswith('3 / 3'), 'annuler a vidé'
+        await page.click('#btn-clear-env')
+        await page.keyboard.press('Escape')
+        assert await page.is_hidden('#confirm-clear')
+        await page.click('#btn-clear-env')
+        await page.click('#confirm-ok')
+        assert await page.get_attribute('#app', 'data-view') == 'accueil'
+        assert await page.is_disabled('nav.tabs [data-view=catalogue]')
+        assert await page.is_disabled('.tool-card[data-go=explorer]')
+        assert await page.is_disabled('#btn-clear-env')
+        assert (await page.inner_text('#file-list')).strip() == ''
+        assert await page.is_hidden('#env-summary')
+        assert await page.is_hidden('#audit-badge')
+        other = R.write(tmp, 'Contrats-GTA-Règles-autre.xlsx', R.frame(R.FR, R.ROWS[:2]))
+        await page.set_input_files('#files-input', [other])
+        await page.wait_for_function("!document.getElementById('env-summary').hidden", timeout=60000)
+        await page.click('nav.tabs [data-view=catalogue]')
+        assert (await page.text_content('#cat-count')).startswith('2 / 2'), 'nouvel environnement mal chargé'
+        await page.click('nav.tabs [data-view=explorer]')
+        assert (await page.text_content('#stats')).startswith('2 '), await page.text_content('#stats')
         await browser.close()
     httpd.shutdown()
 
@@ -206,4 +238,4 @@ if __name__ == '__main__':
             print("ÉCHEC — %s" % exc)
             sys.exit(1)
     print('navigateur : parcours complet ok (accueil, catalogue, explorer, audit, bascule FR/EN, '
-          'mémorisation de la langue, thème, dossier FR et EN)')
+          'mémorisation de la langue, thème, dossier FR et EN, cartes de l\'accueil, remise à zéro)')

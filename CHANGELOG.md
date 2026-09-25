@@ -1,5 +1,38 @@
 # Historique
 
+## v2.2 — 25/09/2026 — Nouvelle page d'accueil, remise à zéro
+
+**Nouveau**
+
+- Page d'accueil refaite (maquette B validée) : accroche courte « Un export #Dièse. Quatre
+  outils. », zone de dépôt animée, trois étapes, et quatre cartes d'outils avec un aperçu animé.
+  Une fois l'environnement chargé, les cartes affichent ses vrais chiffres (règles, dépendances,
+  règles décrites en clair, points à corriger, colonnes de contrat) et leurs aperçus reprennent
+  ses premières règles et ses principaux constats ; un clic ouvre l'outil.
+- Bouton **Réinitialiser / Reset** dans l'en-tête : après confirmation, vide l'environnement
+  (fichiers, graphe, catalogue, audit, formulaire du dossier) pour charger celui d'un autre
+  client. La fenêtre de confirmation se ferme avec Échap ou Annuler ; rien n'est supprimé de
+  l'ordinateur. Une analyse en cours au moment du vidage est ignorée.
+- Anglais : l'onglet « Client dossier » devient « Client file », et les textes de l'interface
+  parlent de *file* (le classeur lui-même garde son titre).
+- Le bouton « Reset » du graphe, qui efface la sélection et les filtres, s'appelle désormais
+  « Désélectionner / Deselect » pour ne pas être confondu avec la remise à zéro.
+
+**Qualité**
+
+- `tests/navigateur.py` couvre aussi les cartes de l'accueil et la remise à zéro (annulation,
+  Échap, vidage, chargement d'un autre environnement).
+
+## v2.1.1 — 25/09/2026 — Balises dans les libellés
+
+- Toute balise HTML des libellés (règles, libellés courts, codes, affectations, types de jour) est
+  retirée et son texte gardé : `<small>GEN</small><br>Credit` donne « GEN » puis « Credit » sur
+  la ligne suivante. Auparavant seules `<b>`, `<i>`, `<u>`, `<strong>`, `<em>`, `<span>`, `<div>` et
+  `<p>` l'étaient, et `<small>` restait visible dans le classeur.
+- Les comparaisons écrites dans les libellés (« 00h < H < 08h ») ne sont pas prises pour des
+  balises. Les espaces insécables (`&nbsp;`) deviennent des espaces.
+- `tests/robustesse.py` : 17 cas.
+
 ## v2.1 — 24/09/2026 — Interface bilingue
 
 **Nouveau**
