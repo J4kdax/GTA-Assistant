@@ -115,8 +115,19 @@ async def run(tmp):
         assert await page.is_disabled('nav.tabs [data-view=catalogue]'), 'onglets actifs sans données'
         await page.set_input_files('#files-input', [rules, days])
         await page.wait_for_function("!document.getElementById('env-summary').hidden", timeout=60000)
-        files = await page.inner_text('#file-list')
+        files = await page.text_content('#file-list')   # repliée une fois prêt (v2.3)
         assert 'export des règles GTA' in files and 'export des types de jour' in files, files
+
+        # ---- accueil v2.3 : l'état « prêt » se voit et mène à l'Explorer
+        assert await page.get_attribute('#app', 'data-home') == 'ready'
+        assert await page.is_hidden('#dropzone'), 'zone de dépôt encore affichée une fois prêt'
+        assert 'Environnement prêt' in await page.inner_text('#env-summary')
+        assert await page.is_hidden('.ready-missing'), 'types de jour signalés absents à tort'
+        assert not await page.evaluate("document.getElementById('files-fold').open"), 'liste des fichiers non repliée'
+        assert 'Commencer ici' in await page.inner_text('.tool-card[data-go=explorer]')
+        assert await page.get_attribute('#home-start', 'data-go') == 'explorer'
+        await page.click('#home-start')
+        assert await page.get_attribute('#app', 'data-view') == 'explorer'
 
         await page.click('nav.tabs [data-view=catalogue]')
         count = await page.text_content('#cat-count')
@@ -209,10 +220,13 @@ async def run(tmp):
         assert await page.is_disabled('#btn-clear-env')
         assert (await page.inner_text('#file-list')).strip() == ''
         assert await page.is_hidden('#env-summary')
+        assert await page.get_attribute('#app', 'data-home') == 'idle'
+        assert await page.is_visible('#dropzone')
         assert await page.is_hidden('#audit-badge')
         other = R.write(tmp, 'Contrats-GTA-Règles-autre.xlsx', R.frame(R.FR, R.ROWS[:2]))
         await page.set_input_files('#files-input', [other])
         await page.wait_for_function("!document.getElementById('env-summary').hidden", timeout=60000)
+        assert await page.is_visible('.ready-missing'), 'types de jour absents non signalés'
         await page.click('nav.tabs [data-view=catalogue]')
         assert (await page.text_content('#cat-count')).startswith('2 / 2'), 'nouvel environnement mal chargé'
         await page.click('nav.tabs [data-view=explorer]')
@@ -238,4 +252,4 @@ if __name__ == '__main__':
             print("ÉCHEC — %s" % exc)
             sys.exit(1)
     print('navigateur : parcours complet ok (accueil, catalogue, explorer, audit, bascule FR/EN, '
-          'mémorisation de la langue, thème, dossier FR et EN, cartes de l\'accueil, remise à zéro)')
+          'mémorisation de la langue, thème, dossier FR et EN, accueil prêt → Explorer, cartes de l\'accueil, remise à zéro)')

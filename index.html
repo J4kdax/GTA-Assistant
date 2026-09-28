@@ -10,7 +10,7 @@
     document.documentElement.setAttribute('data-theme', _t === 'dark' ? 'dark' : 'light');
   } catch (_) { document.documentElement.setAttribute('data-theme', 'light'); }
 </script>
-<title>Atelier GTA #Dièse — v2.2</title>
+<title>Atelier GTA #Dièse — v2.3</title>
 <meta name="description" content="Cartographie, audit, catalogue et dossier de paramétrage GTA #Dièse, dans le navigateur.">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAMFBMVEW8FiEAAADFHyrQXGS1CSPim5/67u/9AAC7FyK6FyJ/AADHOkPZfIPsvcH/AGPDGCTDdLDGAAAAEHRSTlP9AP7+D/7+AqBfAv///wJwpYcBKwAABFFJREFUeNp1lV1oFFcUx39zZ3ezq8V4d9euVZJONilNUraOmUbT9sVtHyzYBxtbLII1kCKtUEko7Zs1kUIjVGgNFBEK8aPQx6CEBvppwVZD1h1aiGJJXIsxW8xmRhsVrbvTh7ubTdbNPF2G35z/Ofc/5xxNAsDgqTGqPposnazdPdUAPQSAPRFNjW76aHRZ4MJLX/fPp34yt9rLSOhzGFOHR+2A2TpULULAu+s5YjLdfzs1selGNQl/1MVzxOTlgdlxvX36MUAInwt4Tv35KwM/Tg/mpitz2JDJFF/EC9nPD2AlhpYApvZTOWi88P73KboTPYsk1r7xXRlw7kzmevNnijUr4DXt50V5ec6dybH+2+kJc6sNUkoZi4rK+xFxDidldKtUEfwRtwJQNedSKkndF8xU8SnOzdlGJcFI2w7/L2/5t5/XO9sbd4y07fCbnUC8JaqHgCPuDxtWatNPaMYf4ul1Ul6sjWhmMA2Ou0oPAdnOc7PBc4Vsuu7qpbqrNyOpezXnHv0zA6LwrkrfBWqATA1w/z6fUKPS6LP1EHBrpMlcmU/UCTMmjHUyLO1I3lybBm17UAABOJjOpW0nnXNSTvrS3J5rOSfnAvXDaBJ0f42eX38hYQMY+jXzUqnQZuehHgIhfGu+vSYU8HqsJe46RWDNvCeA3c18tudjR13m5Zmp/VOlCP8BUsrkK+hGmz4MgNGIuWCILyYFwBYs6wVLAZZ1vt0oEQdaEUBXH/R4rpLI9OwvLLixGlBm67Tp6jtDL0uQ7JV6CN0Xcds7mkS7DfDqcyusuaL5Ru8AAvIegNdXlKBQUwoQ/FBJ9BjLSLREpdRDHBm1ae9oFM9cATj7b1nCXfUIAUOd5ZThi0X/ZX4nIOX1Q1SXEP1JKX1gzYFVF/70eAYgsmnyRTdTjinQqQfQ+pSEgXhQjFA/bAIy+pShJIYrJZpjUkofugdY/tZ51a6RJ/NmccxoeUCwqxlgrbZaSbQYR4VRNhtk8iigG226WWG38MWklEL90mfCDXH13frw2cay2SAw+4D+ExGpJNY1nAwbi25Or7XvAsFv3LSXBbiX/c27rPr3gWmDyPsNQISN4gQIhxsaimbvHQIEHoDcGNmocms80VaUCH4AIPS3AZxULq2qn9wzcU/dtKZq2WUvHQ193C+e/goACLsTQFoliVMnrBVG2WwEroHqza6ixDtzmWJnA9C7hbhRbVGIL5NSSomU0WNVESPZq4DTvTJ6TDyONMeklFJqklBrCuvNfcbUUqDlVn5hVodaU3RsPrQUaXLzC7P60cxe/eLFLdt+bXDKOd72L9163X+OhTZsPkkpijjYZS7aOJCe/ur6+Pjz2/6uVV2jbR/ILgFgJNudHx8/cDpe6wLeg67RpYsVIJBIDAX634sXMhg7j/M4oJDB+X1GITibrwpAKDFGd9O+Z+ceLgNAIJGi4+XB5QHonvi9YrFWPOkbgzNZdfwfRLlwaC7A1R0AAAAASUVORK5CYII=">
 <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
@@ -19,10 +19,11 @@
 <link rel="stylesheet" href="app/atelier.css">
 </head>
 <body>
-<div id="app" data-view="accueil">
+<div id="home-toast" class="home-toast" role="status" hidden></div>
+<div id="app" data-view="accueil" data-home="idle">
   <header>
     <span class="brand" id="brand" title="it4culture"></span>
-    <h1>Atelier GTA <span class="v" id="version-label">#Dièse · v2.2</span></h1>
+    <h1>Atelier GTA <span class="v" id="version-label">#Dièse · v2.3</span></h1>
     <nav class="tabs" role="tablist" aria-label="Outils" data-en-aria="Tools">
       <button role="tab" data-view="accueil" aria-selected="true"><span data-en="Home">Accueil</span></button>
       <button role="tab" data-view="explorer" disabled>Explorer</button>
@@ -153,23 +154,38 @@
         <div class="home-left">
           <h1 class="home-title" data-en-html="One #Dièse export.<br>Four tools.">Un export #Dièse.<br>Quatre outils.</h1>
           <p class="home-lead" data-en="Drop the client's files: everything opens in a few seconds.">Déposez les fichiers du client : tout s'ouvre en quelques secondes.</p>
-          <div id="dropzone" class="dropzone home-drop" tabindex="0" role="button" aria-label="Déposer des exports" data-en-aria="Drop exports">
-            <div class="drop-files" aria-hidden="true">
-              <span class="drop-file f1" data-en="DAYS">JOURS</span>
-              <span class="drop-file f2" data-en="RULES">RÈGLES</span>
-              <span class="drop-file f3" data-en="RATES">TAUX</span>
+          <div class="home-stage">
+            <!-- en attente : zone de dépôt, état du moteur, trois étapes -->
+            <div class="st-idle">
+              <div id="dropzone" class="dropzone home-drop" tabindex="0" role="button" aria-label="Déposer des exports" data-en-aria="Drop exports">
+                <div class="drop-files" aria-hidden="true">
+                  <span class="drop-file f1" data-en="DAYS">JOURS</span>
+                  <span class="drop-file f2" data-en="RULES">RÈGLES</span>
+                  <span class="drop-file f3" data-en="RATES">TAUX</span>
+                </div>
+                <div class="dz-title" data-en="Drag the exports here">Glissez les exports ici</div>
+                <div class="dz-sub" data-en="or click to choose them — each file is recognised by its columns">ou cliquez pour les choisir — chaque fichier est reconnu à ses colonnes</div>
+              </div>
+              <div id="engine-status" class="engine-status" aria-live="polite">Démarrage du moteur…</div>
+              <ol class="home-steps" id="home-steps">
+                <li><i>1</i><span data-en="Drop the “GTA rules” export">Déposez l'export « Règles GTA »</span></li>
+                <li><i>2</i><span data-en="Add the day types for plain names">Ajoutez les types de jour pour des noms en clair</span></li>
+                <li><i>3</i><span data-en="Explore, audit, deliver">Explorez, auditez, livrez</span></li>
+              </ol>
             </div>
-            <div class="dz-title" data-en="Drag the exports here">Glissez les exports ici</div>
-            <div class="dz-sub" data-en="or click to choose them — each file is recognised by its columns">ou cliquez pour les choisir — chaque fichier est reconnu à ses colonnes</div>
+            <!-- analyse en cours : la progression s'affiche dans la zone elle-même (v2.3) -->
+            <div class="st-busy busy-card" id="home-busy" aria-live="polite">
+              <div class="busy-head"><span class="spin" aria-hidden="true"></span><span id="busy-title"></span></div>
+              <ul class="busy-steps" id="busy-steps"></ul>
+              <div class="busy-bar" aria-hidden="true"><b id="busy-bar"></b></div>
+            </div>
+            <!-- prêt : ce que contient l'environnement et par où commencer (v2.3) -->
+            <div id="env-summary" class="st-ready ready-card" role="status" hidden></div>
           </div>
-          <div id="engine-status" class="engine-status" aria-live="polite">Démarrage du moteur…</div>
-          <ul id="file-list" class="file-list"></ul>
-          <ol class="home-steps" id="home-steps">
-            <li><i>1</i><span data-en="Drop the “GTA rules” export">Déposez l'export « Règles GTA »</span></li>
-            <li><i>2</i><span data-en="Add the day types for plain names">Ajoutez les types de jour pour des noms en clair</span></li>
-            <li><i>3</i><span data-en="Explore, audit, deliver">Explorez, auditez, livrez</span></li>
-          </ol>
-          <div id="env-summary" class="env-summary" hidden></div>
+          <details id="files-fold" class="files-fold" open>
+            <summary id="files-sum"></summary>
+            <ul id="file-list" class="file-list"></ul>
+          </details>
           <p class="privacy"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><span data-en="No file is sent to a server.">Aucun fichier n'est envoyé à un serveur.</span></p>
         </div>
 
@@ -184,6 +200,7 @@
               <circle cx="210" cy="106" r="6" class="c3"/><circle cx="70" cy="102" r="6" class="c4"/><circle cx="270" cy="90" r="5" class="c5"/>
             </svg></div>
             <div class="tool-tx"><b>Explorer</b><span data-en="The graph of dependencies between rules.">Le graphe des dépendances entre règles.</span><em class="tool-stat" id="stat-explorer"></em></div>
+            <span class="tool-go" aria-hidden="true" data-en="Open →">Ouvrir →</span><span class="tool-start" data-en="Start here">Commencer ici</span>
           </button>
           <button type="button" class="tool-card" data-go="catalogue" disabled>
             <div class="tool-pv" aria-hidden="true"><div class="pv-rows" id="pv-catalogue">
@@ -193,6 +210,7 @@
               <div class="pv-row"><span class="n">#44</span><span class="l"></span><span class="d" data-en="Adds up “Base hours (#3)” over the week…">Cumule « Heures base (#3) » sur la semaine…</span></div>
             </div></div>
             <div class="tool-tx"><b>Catalogue</b><span data-en="Every rule explained in plain language.">Chaque règle expliquée en langage clair.</span><em class="tool-stat" id="stat-catalogue"></em></div>
+            <span class="tool-go" aria-hidden="true" data-en="Open →">Ouvrir →</span><span class="tool-start" data-en="Start here">Commencer ici</span>
           </button>
           <button type="button" class="tool-card" data-go="audit" disabled>
             <div class="tool-pv" aria-hidden="true"><div class="pv-alerts" id="pv-audit">
@@ -201,6 +219,7 @@
               <div class="pv-al o"><span data-en="Dependency cycles">Cycles de dépendances</span><b>0</b></div>
             </div></div>
             <div class="tool-tx"><b>Audit</b><span data-en="What is wrong, before delivery.">Ce qui cloche, avant de livrer.</span><em class="tool-stat" id="stat-audit"></em></div>
+            <span class="tool-go" aria-hidden="true" data-en="Open →">Ouvrir →</span><span class="tool-start" data-en="Start here">Commencer ici</span>
           </button>
           <button type="button" class="tool-card" data-go="dossier" disabled>
             <div class="tool-pv" aria-hidden="true"><div class="pv-xl">
@@ -209,6 +228,7 @@
               <span class="fl">FR · EN</span>
             </div></div>
             <div class="tool-tx"><b data-en="Client file">Dossier client</b><span data-en="The Excel workbook to hand over to the client.">Le classeur Excel à remettre au client.</span><em class="tool-stat" id="stat-dossier"></em></div>
+            <span class="tool-go" aria-hidden="true" data-en="Open →">Ouvrir →</span><span class="tool-start" data-en="Start here">Commencer ici</span>
           </button>
         </div>
       </div>

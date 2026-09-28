@@ -7,7 +7,7 @@
 "use strict";
 
 const Shell = {
-  VERSION: '2.2',
+  VERSION: '2.3',
   get lang() { return I18N.lang; },   // langue de l'interface (slider FR | EN)
   files: [],               // File[] déposés
   tri: null,               // classement des fichiers par le moteur
@@ -18,12 +18,16 @@ const Shell = {
 
   statusMsg: null,         // () => [texte, genre] : réécrit à chaque changement de langue
   entries: null,           // () => lignes de la liste des fichiers
+  busyPhase: null,         // étape de l'analyse affichée dans la zone de dépôt (v2.3)
+  lastSecs: null,          // durée de la dernière analyse, affichée dans la carte « prêt »
+  toastMsg: null,          // () => texte du message de confirmation, tant qu'il est affiché
 
   init() {
     I18N.bindSwitch();
     I18N.onChange(() => this.relabel());
     document.getElementById('d-langue').value = I18N.lang;
     Summary.idle();
+    this.setHome('idle');
     this.bindClear();
     this.bindTabs();
     this.bindFiles();
@@ -34,6 +38,7 @@ const Shell = {
       document.getElementById('version-label').textContent = '#Dièse · v' + version;
       this.status(() => this.files.length ? L('Analyse…', 'Analysing…')
         : L('Prêt — déposez les exports du client.', 'Ready — drop the client\'s exports.'), 'ok');
+      if (this.busyPhase === 1) this.setBusy(2);
       if (this.files.length) this.refresh();
     }).catch(err => {
       this.status(() => L("Le moteur n'a pas démarré : ", 'The engine did not start: ') + err.message +
@@ -97,6 +102,83 @@ const Shell = {
     setTimeout(() => UI.jumpTo(id), 30);
   },
 
+  // ---- état de l'accueil (v2.3) --------------------------------------------
+  // idle : zone de dépôt ; busy : progression dans la zone ; ready : carte « prêt ».
+  setHome(state) {
+    const app = document.getElementById('app');
+    app.dataset.home = state;
+    if (state !== 'busy') this.busyPhase = null;
+    // la liste des fichiers se replie quand tout est prêt : la carte résume l'essentiel
+    document.getElementById('files-fold').open = state !== 'ready';
+  },
+
+  BUSY_STEPS: [
+    n => Ln(n, 'fichier reçu', 'fichiers reçus', 'file received', 'files received'),
+    () => L('Démarrage du moteur', 'Starting the engine'),
+    () => L('Identification des fichiers', 'Identifying the files'),
+    () => L('Lecture des règles et de leurs dépendances', 'Reading the rules and their dependencies'),
+    () => L('Préparation de l\'Explorer, du catalogue et de l\'audit', 'Preparing the Explorer, catalogue and audit'),
+  ],
+
+  setBusy(phase) {
+    this.setHome('busy');
+    this.busyPhase = phase;
+    this.paintBusy();
+  },
+
+  paintBusy() {
+    if (this.busyPhase == null) return;
+    const phase = this.busyPhase;
+    document.getElementById('busy-title').textContent = phase <= 1
+      ? L('Démarrage du moteur…', 'Starting the engine…')
+      : L('Analyse de l\'environnement…', 'Analysing the environment…');
+    const ul = document.getElementById('busy-steps');
+    ul.innerHTML = '';
+    this.BUSY_STEPS.forEach((label, i) => {
+      const li = document.createElement('li');
+      const done = i < phase, now = i === phase;
+      li.className = done ? 'done' : now ? 'now' : '';
+      const dot = document.createElement('i');
+      dot.textContent = done ? '✓' : now ? '•' : '';
+      const tx = document.createElement('span');
+      tx.textContent = label(this.files.length) + (now ? '…' : '');
+      li.append(dot, tx); ul.appendChild(li);
+    });
+    document.getElementById('busy-bar').style.width =
+      Math.round(100 * (phase + 0.5) / this.BUSY_STEPS.length) + '%';
+  },
+
+  // Message bref sous l'en-tête, une fois l'analyse terminée.
+  toast(text) {
+    const el = document.getElementById('home-toast');
+    clearTimeout(this.toastTimer);
+    this.toastMsg = text;
+    if (!text) { el.classList.remove('show'); el.hidden = true; return; }
+    this.paintToast();
+    el.hidden = false;
+    requestAnimationFrame(() => el.classList.add('show'));
+    this.toastTimer = setTimeout(() => {
+      el.classList.remove('show');
+      this.toastTimer = setTimeout(() => { el.hidden = true; this.toastMsg = null; }, 400);
+    }, 3800);
+  },
+
+  paintToast() {
+    if (!this.toastMsg) return;
+    const el = document.getElementById('home-toast');
+    el.innerHTML = '<span class="ok" aria-hidden="true">✓</span>';
+    el.appendChild(document.createTextNode(this.toastMsg()));
+  },
+
+  // Allumage en cascade des cartes et des onglets, juste après une analyse.
+  flash() {
+    const app = document.getElementById('app');
+    app.classList.remove('fresh'); void app.offsetWidth;
+    app.classList.add('fresh');
+    clearTimeout(this.freshTimer);
+    this.freshTimer = setTimeout(() => app.classList.remove('fresh'), 2600);
+  },
+
   // ---- fichiers ------------------------------------------------------------
   bindFiles() {
     const input = document.getElementById('files-input');
@@ -155,7 +237,10 @@ const Shell = {
     const st = document.getElementById('dossier-status'); st.textContent = ''; st.dataset.kind = '';
     document.getElementById('d-langue').value = I18N.lang;
     if (typeof Explorer !== 'undefined') Explorer.clear();
+    this.lastSecs = null;
+    this.toast(null);
     Summary.idle();
+    this.setHome('idle');
     this.enableTabs(false);
     this.setView('accueil');
     this.status(() => L('Environnement vidé — déposez les exports d\'un autre client.',
@@ -177,8 +262,11 @@ const Shell = {
     document.getElementById('btn-clear-env').disabled = false;
     this.paintFiles(() => this.files.map(f => ({ name: f.name, role: L('en attente', 'waiting'), cls: '' })));
     if (this.engineReady) this.refresh();
-    else this.status(() => L('Les fichiers seront analysés dès que le moteur sera prêt…',
-                             'The files will be analysed as soon as the engine is ready…'));
+    else {
+      this.setBusy(1);
+      this.status(() => L('Les fichiers seront analysés dès que le moteur sera prêt…',
+                          'The files will be analysed as soon as the engine is ready…'));
+    }
   },
 
   paintFiles(entries) {
@@ -186,7 +274,15 @@ const Shell = {
     if (!this.entries) return;
     const ul = document.getElementById('file-list');
     ul.innerHTML = '';
-    for (const e of this.entries()) {
+    const list = this.entries();
+    const found = list.filter(e => e.cls === 'ok').length;
+    const missing = list.filter(e => e.cls === 'missing').length;
+    const waiting = list.every(e => !e.cls);
+    document.getElementById('files-sum').textContent = waiting
+      ? Ln(list.length, 'fichier déposé', 'fichiers déposés', 'file dropped', 'files dropped')
+      : Ln(found, 'fichier reconnu', 'fichiers reconnus', 'file recognised', 'files recognised') +
+        (missing ? ' · ' + Ln(missing, 'manquant', 'manquants', 'missing', 'missing') : '');
+    for (const e of list) {
       const li = document.createElement('li');
       if (e.cls) li.className = e.cls;
       const a = document.createElement('span'); a.className = 'fname'; a.textContent = e.name;
@@ -199,26 +295,38 @@ const Shell = {
     const gen = this.gen = (this.gen || 0) + 1;
     const stale = () => gen !== this.gen;
     try {
+      this.setBusy(2);
       this.status(() => L('Identification des fichiers…', 'Identifying the files…'));
       const tri = await Engine.load(this.files);
       if (stale()) return;
       this.paintFiles(() => Shell.fileEntries(tri));
       this.tri = tri;
       if (!tri.regles) {
+        this.setHome('idle');
         this.status(() => L("Il manque l'export des règles GTA : rien ne peut être analysé sans lui.",
                             'The GTA rules export is missing: nothing can be analysed without it.'), 'warn');
         return;
       }
+      this.setBusy(3);
       this.status(() => L('Analyse du paramétrage…', 'Analysing the configuration…'));
       const t0 = performance.now();
       const model = await Engine.analyse(tri);
       if (stale()) return;
-      this.setModel(model);
+      this.setBusy(4);
+      await new Promise(r => setTimeout(r, 30));   // laisse la dernière étape s'afficher
+      if (stale()) return;
       const secs = ((performance.now() - t0) / 1000).toFixed(1);
+      this.lastSecs = secs;
       this.status(() => L(`Environnement analysé en ${secs.replace('.', ',')} s.`,
                           `Environment analysed in ${secs} s.`), 'ok');
+      this.setModel(model);
+      const n = model.regles.length;
+      this.toast(() => L(`Environnement prêt — ${Ln(n, 'règle analysée', 'règles analysées', 'rule analysed', 'rules analysed')}. Vous pouvez commencer.`,
+                         `Environment ready — ${Ln(n, 'règle analysée', 'règles analysées', 'rule analysed', 'rules analysed')}. You can start.`));
+      this.flash();
     } catch (err) {
       if (stale()) return;
+      this.setHome('idle');
       this.status(() => L('Analyse impossible : ', 'Analysis failed: ') + err.message, 'err');
     }
   },
@@ -235,6 +343,7 @@ const Shell = {
     }
     Views.render(model);
     this.enableTabs(true);
+    this.setHome('ready');
   },
 
   // Rôle de chaque fichier déposé, tel que le moteur l'a reconnu.
@@ -284,6 +393,8 @@ const Shell = {
     document.getElementById('d-langue').value = I18N.lang;   // le dossier suit l'interface
     this.paintStatus();
     this.paintFiles();
+    this.paintBusy();
+    this.paintToast();
     this.enableTabs(!!this.model);
     if (this.model) {
       Views.render(this.model);

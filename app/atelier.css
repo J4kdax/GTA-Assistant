@@ -242,3 +242,104 @@ button.danger:hover{filter:brightness(1.08);background:var(--err)}
 .tab-badge[hidden]{display:none}
 .file-list .frole{white-space:nowrap;flex:none}
 .file-list .fname{min-width:0}
+
+/* ---- accueil v2.3 : signaler clairement que l'environnement est prêt ---------
+ * #app[data-home] : idle (zone de dépôt) | busy (analyse en cours, dans la zone) |
+ * ready (carte « Environnement prêt » et bouton vers l'Explorer).
+ * #app.loaded : un modèle est chargé, les cartes d'outils sont allumées.
+ * #app.fresh : posée ~2,5 s après une analyse, pour l'allumage en cascade. */
+.home-stage > .st-idle,.home-stage > .st-busy,.home-stage > .st-ready{display:none}
+#app[data-home="idle"] .home-stage > .st-idle,
+#app[data-home="busy"] .home-stage > .st-busy{display:block}
+#app[data-home="ready"] .home-stage > .st-ready:not([hidden]){display:block}
+.home-stage > .st-busy,.home-stage > .st-ready{animation:homeStIn .35s ease both}
+@keyframes homeStIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+
+/* analyse en cours */
+.busy-card{border-radius:20px;background:var(--panel);border:2px solid var(--accent-ring);box-shadow:var(--shadow-2);padding:22px 20px}
+.busy-head{display:flex;align-items:center;gap:12px;font-weight:650;font-size:15px}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--accent-soft);border-top-color:var(--accent);animation:homeSpin .8s linear infinite;flex:none}
+@keyframes homeSpin{to{transform:rotate(360deg)}}
+.busy-steps{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:7px;font-size:13px}
+.busy-steps li{display:flex;gap:9px;align-items:center;color:var(--muted-2)}
+.busy-steps li i{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;background:var(--fill)}
+.busy-steps li.done{color:var(--txt)}
+.busy-steps li.done i{background:var(--ok);color:#fff}
+.busy-steps li.now{color:var(--accent);font-weight:600}
+.busy-steps li.now i{background:var(--accent-soft)}
+.busy-bar{height:5px;border-radius:5px;background:var(--fill);margin-top:16px;overflow:hidden}
+.busy-bar b{display:block;height:100%;width:0;background:var(--accent);border-radius:5px;transition:width .5s ease}
+
+/* prêt */
+.ready-card{position:relative;overflow:hidden;border-radius:20px;background:var(--panel);border:2px solid rgba(36,138,61,.45);box-shadow:var(--shadow-2);padding:22px 20px}
+.ready-card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 0%,rgba(36,138,61,.10),transparent 60%);pointer-events:none}
+.ready-head{display:flex;gap:14px;align-items:center;position:relative}
+.ready-check{width:44px;height:44px;border-radius:50%;background:var(--ok);display:grid;place-items:center;flex:none}
+.ready-check svg{stroke:#fff;stroke-width:3.2;fill:none}
+#app.fresh .ready-check{animation:homePop .5s cubic-bezier(.2,1.6,.4,1) both}
+#app.fresh .ready-check svg{stroke-dasharray:30;stroke-dashoffset:30;animation:homeDraw .45s .25s ease forwards}
+@keyframes homePop{from{transform:scale(.3);opacity:0}}
+@keyframes homeDraw{to{stroke-dashoffset:0}}
+.ready-head h3{margin:0;font-size:19px;letter-spacing:-.02em}
+.ready-head p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.ready-card .tiles{position:relative;grid-template-columns:repeat(4,1fr);gap:6px;margin:16px 0 0}
+.ready-card .tile{padding:8px 6px;text-align:center}
+.ready-card .tile b{font-size:19px}
+.ready-card .tile span{font-size:11px}
+.ready-missing{position:relative;margin-top:14px;padding:10px 12px;border-radius:10px;background:rgba(194,112,26,.10);border:1px solid rgba(194,112,26,.35);font-size:12.5px}
+.ready-missing b{color:var(--warn)}
+.link-btn{all:unset;cursor:pointer;color:var(--accent);font-weight:600;font-size:12.5px}
+.link-btn:hover{text-decoration:underline}
+.link-btn:focus-visible{outline:2px solid var(--accent-ring);border-radius:4px}
+.link-btn.warn-link{color:var(--err)}
+.ready-cta{all:unset;box-sizing:border-box;position:relative;display:flex;justify-content:center;align-items:center;gap:8px;width:100%;margin-top:16px;
+  padding:13px 16px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:650;font-size:14.5px;cursor:pointer;
+  box-shadow:var(--shadow-2);transition:transform .15s, background .15s}
+.ready-cta:hover{background:var(--accent-hover);transform:translateY(-1px)}
+.ready-cta:focus-visible{box-shadow:0 0 0 3.5px var(--accent-ring)}
+.ready-cta .arr{transition:transform .2s}
+.ready-cta:hover .arr{transform:translateX(3px)}
+.ready-links{position:relative;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:12.5px}
+.ready-meta{position:relative;margin:10px 0 0;font-size:11.5px;color:var(--muted-2)}
+
+/* fichiers déposés : dépliés tant que rien n'est prêt, repliés ensuite */
+.files-fold{margin-top:12px;font-size:12.5px}
+.files-fold:not(:has(li)){display:none}
+.files-fold summary{cursor:pointer;color:var(--muted);list-style:none;padding:2px 0}
+.files-fold summary::-webkit-details-marker{display:none}
+.files-fold summary::before{content:"▸ "}
+.files-fold[open] summary::before{content:"▾ "}
+
+/* cartes d'outils : éteintes avant le dépôt, allumées ensuite */
+#app:not(.loaded) .tool-card{opacity:.55;filter:grayscale(1);box-shadow:none}
+#app:not(.loaded) .tool-card *{animation-play-state:paused !important}
+.tool-stat.idle::before{content:"";display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;background:var(--muted-2);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6'%3E%3Crect x='5' y='11' width='14' height='10' rx='2' fill='%23000'/%3E%3Cpath d='M8 11V7a4 4 0 018 0v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6'%3E%3Crect x='5' y='11' width='14' height='10' rx='2' fill='%23000'/%3E%3Cpath d='M8 11V7a4 4 0 018 0v4'/%3E%3C/svg%3E") center/contain no-repeat}
+#app.loaded .tool-card{border-color:var(--accent-ring)}
+#app.loaded .tool-card.alert{border-color:rgba(215,0,21,.45)}
+#app.loaded .tool-stat{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--accent-soft)}
+#app.loaded .tool-stat.warn{background:rgba(215,0,21,.10)}
+.tool-go{position:absolute;right:14px;bottom:14px;font-size:12px;font-weight:650;color:var(--accent);opacity:0;transition:opacity .2s}
+#app.loaded .tool-go{opacity:1}
+.tool-start{display:none;position:absolute;top:10px;right:10px;font-size:10.5px;font-weight:700;letter-spacing:.02em;
+  color:var(--on-accent);background:var(--accent);padding:3px 8px;border-radius:999px}
+#app.loaded .tool-card.suggested .tool-start{display:block}
+#app.fresh .tool-card{animation:homeCardOn .55s cubic-bezier(.2,.8,.2,1) both}
+#app.fresh .tool-card:nth-child(2){animation-delay:.12s}
+#app.fresh .tool-card:nth-child(3){animation-delay:.24s}
+#app.fresh .tool-card:nth-child(4){animation-delay:.36s}
+@keyframes homeCardOn{0%{opacity:.55;filter:grayscale(1);transform:translateY(6px)}60%{box-shadow:0 0 0 6px var(--accent-soft)}100%{opacity:1;filter:none;transform:none}}
+#app.fresh nav.tabs [role=tab]:not([data-view="accueil"]){animation:homeTabOn 1.2s .5s ease both}
+@keyframes homeTabOn{0%,100%{box-shadow:none}35%{box-shadow:0 0 0 4px var(--accent-soft);color:var(--accent)}}
+
+/* message de confirmation, sous l'en-tête */
+.home-toast{position:fixed;left:50%;top:68px;z-index:60;transform:translate(-50%,-16px);opacity:0;pointer-events:none;
+  padding:10px 16px;border-radius:12px;background:var(--panel);border:1px solid rgba(36,138,61,.4);box-shadow:var(--shadow-3);
+  font-size:13px;font-weight:600;color:var(--txt);transition:opacity .35s, transform .35s}
+.home-toast.show{opacity:1;transform:translate(-50%,0)}
+.home-toast .ok{color:var(--ok);margin-right:4px}
+
+@media (prefers-reduced-motion: reduce){
+  .home-stage > *,#app.fresh .tool-card,#app.fresh .ready-check,#app.fresh .ready-check svg,#app.fresh nav.tabs [role=tab],.spin{animation:none !important}
+  #app.fresh .ready-check svg{stroke-dashoffset:0}
+  .home-toast{transition:none}
+}

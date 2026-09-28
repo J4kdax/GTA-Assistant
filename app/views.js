@@ -30,6 +30,13 @@ const Summary = {
     for (const id of ['pv-catalogue', 'pv-audit']) this.pristine[id] = document.getElementById(id).innerHTML;
     document.querySelectorAll('.tool-card[data-go]').forEach(card =>
       card.addEventListener('click', () => Shell.setView(card.dataset.go)));
+    // carte « Environnement prêt » : bouton de départ, ajout d'un fichier, audit
+    document.getElementById('env-summary').addEventListener('click', e => {
+      const b = e.target.closest('[data-act]');
+      if (!b) return;
+      if (b.dataset.act === 'start' || b.dataset.act === 'audit') Shell.setView(b.dataset.go);
+      if (b.dataset.act === 'add') Shell.pickFiles();
+    });
   },
 
   idle() {
@@ -40,6 +47,7 @@ const Summary = {
       const box = document.getElementById(id);
       if (box.dataset.live) { box.innerHTML = html; delete box.dataset.live; I18N.apply(box); }
     }
+    document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('alert', 'suggested'));
     const el = document.getElementById('env-summary');
     el.hidden = true; el.innerHTML = '';
     const badge = document.getElementById('audit-badge');
@@ -77,19 +85,45 @@ const Summary = {
       ? findings.map(([k, f]) => `<div class="pv-al ${k}"><span>${esc(title(f))}</span><b>${f.nombre}</b></div>`).join('')
       : `<div class="pv-al o"><span>${L('Aucun constat', 'No finding')}</span><b>0</b></div>`;
 
+    // Par où commencer : l'Explorer, ou le Catalogue si le graphe n'a pas pu se charger.
+    const start = Shell.explorerOk ? 'explorer' : 'catalogue';
+    document.querySelectorAll('.tool-card').forEach(c => {
+      c.classList.toggle('suggested', c.dataset.go === start);
+      c.classList.toggle('alert', c.dataset.go === 'audit' && fixes > 0);
+    });
+
+    // Carte « Environnement prêt » (v2.3), à la place de la zone de dépôt.
     const tiles = [
       [m.regles.length, L('règles', 'rules')],
-      [d.types, L('types', 'types')],
       [m.contrats.length, L('contrats', 'contracts')],
       [d.compteurs, L('compteurs', 'counters')],
       [m.types_jour.length || '—', L('jours', 'days')],
     ];
     const fmt = lang === 'en' ? m.format_en : m.format;
+    const secs = Shell.lastSecs;
+    const noDays = ((Shell.tri && Shell.tri.manque_codes) || []).some(c => c !== 'regles');
+    const check = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
     const el = document.getElementById('env-summary');
     el.innerHTML = `
+      <div class="ready-head"><span class="ready-check">${check}</span><div>
+        <h3>${L('Environnement prêt', 'Environment ready')}</h3>
+        <p>${L(`Export « ${esc(fmt)} »`, `“${esc(fmt)}” export`)}${secs ? ' · ' + L(`analysé en ${secs.replace('.', ',')} s`, `analysed in ${secs} s`) : ''}</p>
+      </div></div>
       <div class="tiles">${tiles.map(([n, l]) => `<div class="tile"><b>${esc(n)}</b><span>${esc(l)}</span></div>`).join('')}</div>
-      <p class="muted">${L(`Export « ${esc(fmt)} »`, `“${esc(fmt)}” export`)} · ${L('moteur', 'engine')} v${esc(m.moteur)}${
-        fixes ? ` · <a href="#audit" class="warn-link">${esc(Ln(fixes, 'point à corriger', 'points à corriger', 'item to fix', 'items to fix'))}</a>` : ''}</p>`;
+      ${noDays ? `<div class="ready-missing"><b>${L('Types de jour absents :', 'Day types missing:')}</b> ${
+        L('les journées s\'afficheront sous forme d\'identifiants.', 'days will appear as numbers.')}
+        <button type="button" class="link-btn" data-act="add">${L('+ Ajouter l\'export', '+ Add the export')}</button></div>` : ''}
+      <button type="button" class="ready-cta" id="home-start" data-act="start" data-go="${start}">${start === 'explorer'
+        ? L('Commencer — ouvrir l\'Explorer', 'Start — open the Explorer')
+        : L('Commencer — ouvrir le Catalogue', 'Start — open the Catalogue')} <span class="arr" aria-hidden="true">→</span></button>
+      <div class="ready-links">
+        <button type="button" class="link-btn" data-act="add">${L('+ Ajouter un fichier', '+ Add a file')}</button>
+        ${fixes ? `<button type="button" class="link-btn warn-link" data-act="audit" data-go="audit">${
+          fixes > 1 ? L(`Voir les ${fixes} points à corriger dans l'Audit`, `See the ${fixes} items to fix in the Audit`)
+                    : L('Voir le point à corriger dans l\'Audit', 'See the item to fix in the Audit')}</button>`
+          : `<span class="muted">${L('Aucun point bloquant à l\'audit', 'Nothing blocking in the audit')}</span>`}
+      </div>
+      <p class="ready-meta">${L('moteur', 'engine')} v${esc(m.moteur)}</p>`;
     el.hidden = false;
     const badge = document.getElementById('audit-badge');
     badge.hidden = !fixes; badge.textContent = fixes;

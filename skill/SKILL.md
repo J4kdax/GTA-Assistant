@@ -488,6 +488,10 @@ remonter au client, jamais un motif de les masquer du dossier.
 
 ## Versions
 
+- **v2.3** — Atelier : l'accueil signale clairement que l'environnement est prêt (cartes
+  d'outils éteintes avant le dépôt, progression dans la zone de dépôt, carte « Environnement
+  prêt » avec bouton vers l'Explorer, types de jour absents signalés). Moteur inchangé.
+
 - **v2.2** — Atelier : page d'accueil refaite (quatre cartes d'outils animées, chiffres réels de
   l'environnement), bouton de remise à zéro avec confirmation, « Client file » en anglais.
   Moteur et classeurs inchangés.

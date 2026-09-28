@@ -23,7 +23,7 @@ langue d'origine, pour qu'on les retrouve à l'identique dans #Dièse.
 
 | Onglet | Ce qu'il fait |
 |---|---|
-| Accueil | Dépôt des exports en vrac, reconnus à leurs colonnes ; quatre cartes d'outils qui affichent les chiffres de l'environnement et y mènent |
+| Accueil | Dépôt des exports en vrac, reconnus à leurs colonnes ; progression de l'analyse, puis carte « Environnement prêt » et bouton vers l'Explorer ; quatre cartes d'outils qui s'allument avec les chiffres de l'environnement et y mènent |
 | Explorer | Graphe des dépendances entre règles (ex-Cartographe), avec la phrase en clair de chaque règle dans le panneau de détail |
 | Catalogue | Le contenu du dossier client à l'écran, filtrable par type de contrat et par compteur, en français ou en anglais ; un clic sur le # ouvre la règle dans le graphe |
 | Audit | Constats à corriger et à savoir, référentiels à réclamer, et les analyses détaillées du graphe |

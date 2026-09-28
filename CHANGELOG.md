@@ -1,5 +1,37 @@
 # Historique
 
+## v2.3 — 28/09/2026 — Accueil : l'environnement prêt se voit
+
+Après un dépôt, la page d'accueil changeait à peine : on ne savait pas qu'on pouvait commencer.
+
+**Nouveau**
+
+- Avant le dépôt, les quatre cartes d'outils sont éteintes (grisées, aperçus figés, cadenas
+  « Disponible après dépôt »). Seule la zone de dépôt est active.
+- Pendant l'analyse, la progression s'affiche dans la zone de dépôt elle-même : fichiers
+  reçus, démarrage du moteur, identification, lecture des règles, préparation des outils, avec
+  une barre.
+- Une fois l'analyse terminée, la zone de dépôt laisse place à une carte **Environnement
+  prêt** : coche verte, export reconnu, durée d'analyse, chiffres clés (règles, contrats,
+  compteurs, jours) et un grand bouton **Commencer — ouvrir l'Explorer** (le Catalogue si le
+  graphe n'a pas pu se charger). Liens « + Ajouter un fichier » et, s'il y en a, vers les
+  points à corriger de l'Audit.
+- S'il manque l'export des types de jour, la carte le signale et propose de l'ajouter.
+- Les cartes d'outils s'allument en cascade, affichent leurs chiffres en pastille et
+  « Ouvrir → » ; la carte Explorer porte « Commencer ici », la carte Audit passe en rouge s'il
+  y a des points à corriger. Les onglets pulsent brièvement et un message confirme
+  « Environnement prêt — N règles analysées ».
+- La liste des fichiers déposés se replie une fois prêt (« 3 fichiers reconnus »).
+- Animations désactivées si le système demande de réduire les mouvements. FR / EN complet.
+
+Moteur inchangé : les classeurs ne diffèrent que par le numéro de version du pied de page.
+
+**Qualité**
+
+- `tests/navigateur.py` vérifie l'état « prêt » (zone de dépôt masquée, carte affichée, liste
+  repliée, bouton vers l'Explorer), le retour à la zone de dépôt après remise à zéro et le
+  signalement des types de jour absents.
+
 ## v2.2 — 25/09/2026 — Nouvelle page d'accueil, remise à zéro
 
 **Nouveau**
